@@ -22,6 +22,7 @@
 window.NOVA_CONFIG = window.NOVA_CONFIG || {
   supabaseUrl: 'https://tbatixsqbdfqmzezkdgf.supabase.co',
   supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRiYXRpeHNxYmRmcW16ZXprZGdmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4NzQwNDYsImV4cCI6MjEwNjQ1MDA0Nn0.Uapv8gnCzz2r-I7nJcurUSevCvT8rmlFHYnhb1etBwM'
+  ,vapidPublicKey: 'BH1p_mHfHb6P-SSAcYGo0ALRU0cRoP_SbtAbcNSFVFASOHh__gozO7L9Z5LTbVEf5oLE2IhMFVyd4ZAnPx6SJF8'
 };
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -291,6 +292,11 @@ details.block[open] summary{margin-bottom:10px}
 .tg-head button{padding:10px 8px;font-size:13px;color:var(--ink-2);border:0;border-left:1px solid var(--line-2);background:none;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px}
 .tg-head button.today{color:var(--accent);font-weight:600}
 .tg-head button:hover{background:var(--surface-2)}
+.push-box p{margin:6px 0 10px}
+.push-acts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.push-tip{margin-top:12px;font-size:14px}
+.push-tip summary{cursor:pointer;color:var(--accent);font-weight:600}
+.push-tip ol{padding-left:20px;line-height:1.5;color:var(--ink-2)}
 .howto{margin:10px 0 18px;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.45}
 /* ============ ASSISTENTE (IA) ============ */
 .ai-bar{margin:0 0 18px}
@@ -780,7 +786,7 @@ const Store = {
     if (!this.state) this.state = defaultState();
   },
   persistLocal() { try { localStorage.setItem(this.KEY, JSON.stringify(this.state)); } catch (e) { } },
-  save() { this.state.updatedAt = Date.now(); this.persistLocal(); Sync.push(); },
+  save() { this.state.updatedAt = Date.now(); this.persistLocal(); Sync.push(); if (typeof Push !== 'undefined') Push.queue(); },
   commit(fn) { fn(this.state); this.save(); if (typeof App !== 'undefined') App.render(); },
 };
 
@@ -1259,6 +1265,45 @@ const Notify = {
     if (n.weekly && new Date().getDay() === 0 && inWin('18:00') && !log['w|' + T]) out.push({ key: 'w|' + T, kind: 'weekly' });
     return out;
   },
+  /* Avisos futuros para enviar com o app fechado (mesmas chaves usadas aqui dentro) */
+  schedule(now = Date.now(), days = 14) {
+    const s = Store.state, n = s.settings.notif; if (!n.enabled || !s.user.onboarded) return [];
+    const T = todayStr(), log = s.notifLog || {}, out = [];
+    const a0 = toMin(n.startAt), b0 = toMin(n.quietStart);
+    const allowed = ms => { const d = new Date(ms), m = d.getHours() * 60 + d.getMinutes(); return a0 < b0 ? (m >= a0 && m < b0) : (m >= a0 || m < b0); };
+    const nextStart = ms => { const x = new Date(ms); x.setHours(Math.floor(a0 / 60), a0 % 60, 0, 0); if (x.getTime() <= ms) x.setDate(x.getDate() + 1); return x.getTime(); };
+    const ymdOf = ms => ymd(new Date(ms));
+    const add = (chave, at, o) => { if (log[chave] || at < now - 60000) return; out.push(Object.assign({ chave, enviar_em: new Date(at).toISOString(), acoes: [], importante: false, item: null, corpo: '' }, o)); };
+    const quando = (d, time, at) => { const fd = ymdOf(at); return (d === fd ? 'Hoje' : d === addDays(fd, 1) ? 'Amanhã' : `${DOW_S[parseYmd(d).getDay()]}, ${fmtShort(d)}`) + ' às ' + time; };
+    for (let k = 0; k < days; k++) {
+      const d = addDays(T, k);
+      for (const i of Tasks.on(d)) {
+        if (i.done || !i.time) continue;
+        const start = dt(d, i.time), t = i.t, ev = t.type === 'event';
+        const acoes = ev ? ['open'] : ['done', 'snooze'], imp = t.priority === 1 || !!t.persistent;
+        if (t.reminder != null) {
+          let at = start - t.reminder * 60000;
+          if (!allowed(at)) { const na = nextStart(at); if (na < start) at = na; else at = null; }
+          if (at != null) {
+            const mins = Math.round((start - at) / 60000);
+            const when = mins <= 1 ? 'Agora' : mins < 60 ? `Daqui a ${mins} minutos` : mins < 1440 ? `Daqui a ${fmtDur(mins)}` : (ymdOf(at) === addDays(d, -1) ? 'Amanhã' : `Em ${fmtDur(mins)}`);
+            add(`r|${i.key}|${i.time}|${t.reminder}`, at, { titulo: `${ev ? '📅' : '🔔'} ${when}: ${t.title}`, corpo: `${ev ? 'Compromisso' : 'Tarefa'} · ${quando(d, i.time, at)}`, item: i.key, acoes, importante: imp });
+          }
+        }
+        if (t.persistent && !ev) for (let j = 1; j <= 3; j++) {
+          const at = start + j * 1800000; if (!allowed(at)) continue;
+          add(`p|${i.key}|${Math.floor(at / 1800000)}`, at, { titulo: 'Você ainda não concluiu esta tarefa.', corpo: t.title, item: i.key, acoes: ['done', 'snooze'], importante: true });
+        } else if (n.overdue && t.type === 'task') {
+          const at = start + Math.max(i.dur, 15) * 60000;
+          if (allowed(at)) add(`o|${i.key}|${i.time}`, at, { titulo: '⚠️ Essa tarefa ainda não foi concluída.', corpo: t.title, item: i.key, acoes: ['done', 'snooze'] });
+        }
+      }
+      if (n.daily) { const at = dt(d, n.dailyAt); if (allowed(at)) { const st = Sched.stats(d); add('d|' + d, at, { titulo: '☀️ Bom dia! Aqui está seu plano para hoje.', corpo: st.pend.length || st.events.length ? `${st.pend.length} ${st.pend.length === 1 ? 'tarefa' : 'tarefas'} e ${st.events.length} ${st.events.length === 1 ? 'compromisso' : 'compromissos'}.` : 'Nada marcado. Dia livre ✨' }); } }
+      if (n.review && k === 0) { const c = Sched.stats(d).pend.length, at = dt(d, s.user.dayEnd); if (c && allowed(at)) add('v|' + d, at, { titulo: 'Seu dia terminou.', corpo: `Você tem ${c} ${c === 1 ? 'tarefa pendente' : 'tarefas pendentes'}. Quer reorganizar para amanhã?` }); }
+      if (n.weekly && parseYmd(d).getDay() === 0) { const at = dt(d, '18:00'); if (allowed(at)) add('w|' + d, at, { titulo: 'É hora de organizar sua próxima semana.', corpo: 'Abra o Planner e distribua suas tarefas.' }); }
+    }
+    return out.sort((a, b) => a.enviar_em < b.enviar_em ? -1 : 1).slice(0, 350);
+  },
   tick() {
     const s = Store.state; if (!s.user.onboarded || !this.allowedNow()) return;
     const fire = this.collect(); if (!fire.length) return;
@@ -1361,6 +1406,7 @@ const Views = {
     const routines = s.routines.filter(r => (r.days || []).includes(new Date().getDay()));
     const demoN = Demo.count();
     return `<section class="page today">
+      ${Push.hint()}
       ${demoN ? `<div class="hint" style="margin-bottom:18px"><p>Seu NOVA ainda tem ${demoN} itens de exemplo (tarefas, notas e rotinas de demonstração).</p><button class="btn primary" data-act="demo-clear">Remover exemplos</button></div>` : ''}
       <header class="today-head">
         <div><h1 class="greet">${hello}${s.user.name ? ', ' + esc(s.user.name) : ''}${emo}</h1><p class="date">${fmtLong(T)}</p></div>
@@ -1715,6 +1761,7 @@ const Views = {
         <div class="swatches">${Object.entries(ACCENTS).map(([k, [l, c]]) => `<button class="swatch" style="background:${c}" data-act="set-accent" data-v="${k}" aria-pressed="${s.settings.accent === k}" aria-label="Cor ${l}" title="${l}"></button>`).join('')}</div>
       </div>
       ${Pwa.section()}
+      ${Push.section()}
       <div class="settings-sec"><h2>Notificações</h2>
         ${tg('settings.notif.enabled', n.enabled, 'Notificações ativadas')}
         <label class="toggle"><span>Avisos do navegador<small>${perm === 'granted' ? 'Permitido neste navegador.' : perm === 'denied' ? 'Bloqueado pelo navegador. Libere nas permissões do site.' : perm === 'unsupported' ? 'Este navegador não oferece avisos.' : 'Mostra avisos mesmo com a aba em segundo plano.'}</small></span><input type="checkbox" class="switch" data-change="notif-browser" ${n.browser && perm === 'granted' ? 'checked' : ''} ${perm === 'unsupported' || perm === 'denied' ? 'disabled' : ''}></label>
@@ -1858,6 +1905,7 @@ const Cloud = {
     } catch (e) {
       UI.snack('Sem conexão: seus dados ficam guardados neste aparelho até a próxima entrada.');
     }
+    if (typeof Push !== 'undefined') await Push.forget();
     const u = this.user; this.user = null;
     await this.sb.auth.signOut().catch(() => { });
     if (u) location.reload();
@@ -2207,9 +2255,10 @@ const Pwa = {
     }
     // atalhos e toque em notificação com o app fechado
     const q = new URLSearchParams(location.search);
-    if (q.get('abrir')) setTimeout(() => { const k = q.get('abrir'); if (Tasks.get(k)) Modals.editor(k); }, 400);
+    if (q.get('acao') === 'done' && q.get('abrir')) setTimeout(() => { const k = q.get('abrir'), i = Tasks.get(k); if (i && !i.done) { Store.commit(s => Tasks._complete(s, k, true)); UI.snack('✓ Concluída: ' + i.t.title); } }, 400);
+    else if (q.get('abrir')) setTimeout(() => { const k = q.get('abrir'); if (Tasks.get(k)) Modals.editor(k); }, 400);
     if (q.get('novo')) setTimeout(() => Modals.capture({}), 400);
-    if (q.has('abrir') || q.has('novo') || q.has('app')) history.replaceState(null, '', location.pathname + location.hash);
+    if (q.has('abrir') || q.has('novo') || q.has('app') || q.has('acao')) history.replaceState(null, '', location.pathname + location.hash);
   },
 
   updateReady(worker) {
@@ -2261,9 +2310,118 @@ const Pwa = {
     const acts = (msg.actions || []).filter(a => ['done', 'snooze', 'open'].includes(a[0])).slice(0, 2).map(a => ({ action: a[0], title: a[1] }));
     await reg.showNotification(msg.title, {
       body: msg.body || '', tag: f.key, renotify: true, data: { key: f.inst ? f.inst.key : '' },
-      icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', requireInteraction: !!msg.persistent, actions: acts,
+      icon: '/icons/icon-192.png', badge: '/icons/badge-96.png', vibrate: [180, 80, 180], timestamp: Date.now(), requireInteraction: !!msg.persistent, actions: acts,
     });
     return true;
+  },
+};
+
+/* =====================================================================
+   Push — lembretes com o app fechado, como as notificações do WhatsApp
+   ===================================================================== */
+const Push = {
+  timer: null, last: '', busy: false,
+  key() { return (window.NOVA_CONFIG || {}).vapidPublicKey; },
+  supported() { return Pwa.canUse() && 'PushManager' in window && 'Notification' in window && !!this.key(); },
+  ready() { return this.supported() && typeof Cloud !== 'undefined' && !!Cloud.user && !!Cloud.sb; },
+  device() { const u = navigator.userAgent; return (/android/i.test(u) ? 'Android' : Pwa.ios() ? 'iPhone/iPad' : /windows/i.test(u) ? 'Windows' : /mac/i.test(u) ? 'Mac' : 'Navegador') + (Pwa.standalone() ? ' (app)' : ''); },
+  u8(b64) { const p = '='.repeat((4 - b64.length % 4) % 4), raw = atob((b64 + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from([...raw].map(c => c.charCodeAt(0))); },
+  async sub() { const reg = await navigator.serviceWorker.ready; return reg.pushManager.getSubscription(); },
+
+  async status() {
+    if (!this.supported()) return 'unsupported';
+    if (typeof Cloud === 'undefined' || !Cloud.user) return 'nologin';
+    if (Pwa.ios() && !Pwa.standalone()) return 'ios-install';
+    if (Notification.permission === 'denied') return 'denied';
+    const s = await Promise.race([this.sub().catch(() => null), new Promise(r => setTimeout(() => r(null), 3000))]);
+    return s && Store.state.settings.notif.push ? 'on' : 'off';
+  },
+
+  async enable() {
+    if (this.busy) return; this.busy = true;
+    try {
+      if (Pwa.ios() && !Pwa.standalone()) { Pwa.howTo(); return; }
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') { UI.snack('Sem permissão, o NOVA não consegue avisar. Libere as notificações do site no navegador.'); return; }
+      const reg = await navigator.serviceWorker.ready;
+      let s = await reg.pushManager.getSubscription();
+      if (!s) s = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this.u8(this.key()) });
+      const j = s.toJSON();
+      const { error } = await Cloud.sb.rpc('nova_push_registrar', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_aparelho: this.device() });
+      if (error) throw error;
+      this.last = '';
+      Store.commit(st => { st.settings.notif.enabled = true; st.settings.notif.browser = true; st.settings.notif.push = true; });
+      this.queue(true);
+      UI.snack('Pronto! Os lembretes vão chegar mesmo com o app fechado.');
+    } catch (e) {
+      console.warn('[NOVA] push', e);
+      UI.snack(/relation|function|does not exist|schema cache/i.test(String(e && e.message)) ? 'Falta rodar o SQL das notificações no Supabase.' : 'Não consegui ativar agora. Tente de novo em instantes.');
+    } finally { this.busy = false; this.paint(); }
+  },
+  async disable() {
+    await this.forget();
+    UI.snack('Lembretes com o app fechado desativados neste aparelho.'); this.paint();
+  },
+  // tira este aparelho da lista (também usado ao sair da conta)
+  async forget() {
+    try { const s = await this.sub(); if (s) { if (Cloud.sb) await Cloud.sb.rpc('nova_push_desregistrar', { p_endpoint: s.endpoint }); await s.unsubscribe(); } } catch (e) { }
+  },
+  async test() {
+    try {
+      const { error } = await Cloud.sb.from('nova_avisos').insert({ chave: 'teste|' + Date.now(), enviar_em: new Date().toISOString(), titulo: '🔔 Teste do NOVA', corpo: 'Funcionou! Seus lembretes vão chegar assim, mesmo com o app fechado.', origem: 'teste', importante: true });
+      if (error) throw error;
+      UI.snack('Teste enviado. Chega em até 1 minuto: pode até fechar o app para ver.');
+    } catch (e) { UI.snack('Não consegui enviar o teste. Confira se o SQL das notificações foi rodado.'); }
+  },
+
+  // envia a lista de próximos avisos para o servidor (depois de cada mudança)
+  queue(now) {
+    if (!this.ready() || !Store.state.settings.notif.push) return;
+    clearTimeout(this.timer);
+    this.timer = setTimeout(async () => {
+      try {
+        const items = Notify.schedule(), sig = JSON.stringify(items);
+        if (sig === this.last) return;
+        const { error } = await Cloud.sb.rpc('nova_avisos_sincronizar', { p_itens: items });
+        if (!error) this.last = sig;
+      } catch (e) { }
+    }, now ? 200 : 3000);
+  },
+  start() {
+    this.queue(true);
+    setInterval(() => { this.last = ''; this.queue(true); }, 3 * 3600e3);   // a janela de 14 dias anda com o tempo
+  },
+
+  /* ---------- Configurações ---------- */
+  section() {
+    if (!this.supported()) return '';
+    setTimeout(() => this.paint(), 0);
+    return `<div class="settings-sec"><h2>Lembretes no celular</h2><div id="push-box" class="push-box"><p class="muted">Verificando…</p></div></div>`;
+  },
+  async paint() {
+    const box = $('#push-box'); if (!box) return;
+    const st = await this.status(), b = $('#push-box'); if (!b) return;
+    const tip = `<details class="push-tip"><summary>Quero que apareça por cima da tela, com som, como o WhatsApp</summary>
+      <ol><li><b>Android:</b> abra <b>Configurações do celular → Apps → NOVA</b> (ou <b>Chrome</b>, se não instalou) <b>→ Notificações</b>.</li>
+      <li>Ative <b>Mostrar como pop-up</b> (ou <b>Pop-up na tela</b>), <b>Som</b> e <b>Tela de bloqueio</b>.</li>
+      <li>Desative a <b>economia de bateria</b> para o NOVA/Chrome, para os avisos não atrasarem.</li>
+      <li><b>iPhone:</b> Ajustes → Notificações → NOVA → ative <b>Alertas</b>, <b>Sons</b> e estilo <b>Banners: persistente</b>.</li></ol></details>`;
+    const html = {
+      nologin: '<p class="muted">Entre na sua conta para receber lembretes com o app fechado.</p>',
+      'ios-install': `<p>No iPhone, os lembretes com o app fechado só funcionam com o NOVA <b>instalado na tela de início</b>.</p><p class="muted">Instale, abra o NOVA pelo ícone e volte aqui para ativar.</p><button class="btn primary" data-act="pwa-install">Como instalar</button>`,
+      denied: '<p>As notificações estão <b>bloqueadas</b> neste aparelho.</p><p class="muted">Toque no cadeado ao lado do endereço do site (ou nas configurações do app) → Permissões → Notificações → Permitir. Depois volte aqui.</p>',
+      off: `<p>Receba os lembretes como as mensagens do WhatsApp: com som, na tela de bloqueio e mesmo com o NOVA fechado.</p><button class="btn primary" data-act="push-on">${icon('bell', 16)}Ativar neste aparelho</button>`,
+      on: `<p>✅ <b>Ativo neste aparelho.</b> Os lembretes chegam mesmo com o app fechado.</p><div class="push-acts"><button class="btn" data-act="push-test">Enviar teste</button><button class="btn ghost" data-act="push-off">Desativar</button></div>${tip}`,
+      unsupported: '<p class="muted">Este navegador não aceita notificações com o app fechado. No celular, use o Chrome (Android) ou instale o app (iPhone).</p>',
+    }[st] || '';
+    b.innerHTML = html;
+  },
+  // dica na tela Hoje para quem ainda não ativou
+  hint() {
+    if (!this.supported() || typeof Cloud === 'undefined' || !Cloud.user || Store.state.settings.notif.push) return '';
+    if ((Store.state.dismissed || {})['push-hint']) return '';
+    if ('Notification' in window && Notification.permission === 'denied') return '';
+    return `<div class="hint" style="margin-bottom:18px"><p>🔔 <b>Receba os lembretes como no WhatsApp</b>, com som e mesmo com o app fechado.</p><div class="acts"><button class="btn primary sm" data-act="push-on">Ativar</button><button class="btn ghost sm" data-act="push-hint-no">Agora não</button></div></div>`;
   },
 };
 /* =====================================================================
@@ -2313,7 +2471,7 @@ const App = {
     if (this.isMobile()) this.params.agenda.view = 'month';
     this.renderShell(); this.render(true); this.bind();
     if (!Store.state.user.onboarded) Onboarding.show();
-    Notify.start(); Sync.init(); Pwa.init();
+    Notify.start(); Sync.init(); Pwa.init(); Push.start();
     setInterval(() => { if (!UI.isOpen() && !document.hidden && !$('.focus') && !document.activeElement.matches('input,textarea,select')) this.render(); }, 60000);
   },
   applyTheme() {
@@ -2418,6 +2576,10 @@ const Actions = {
   'close-modal': () => UI.close(),
   capture: d => Modals.capture({ date: d.date, time: d.time, project: d.project, type: d.type }),
   'pwa-install': () => Pwa.install(),
+  'push-on': () => Push.enable(),
+  'push-off': () => Push.disable(),
+  'push-test': () => Push.test(),
+  'push-hint-no': () => Store.commit(s => { s.dismissed = s.dismissed || {}; s.dismissed['push-hint'] = Date.now(); }),
   'ai-send': d => Ai.send(d.w),
   'ai-mic': d => Ai.mic(d.w),
   'ai-example': d => Ai.send('page', d.text),

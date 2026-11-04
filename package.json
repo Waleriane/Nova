@@ -1,0 +1,8 @@
+{
+  "name": "nova",
+  "private": true,
+  "description": "NOVA — organize, lembre, execute",
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

@@ -1,6 +1,6 @@
 /* NOVA · service worker — deixa o app abrir rápido e funcionar sem internet.
    Ao publicar uma versão nova, ele baixa sozinho e o app avisa "Nova versão". */
-const VERSION = 'nova-2026-11-04-1';
+const VERSION = 'nova-2026-11-04-2';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/favicon-64.png'];
 
 self.addEventListener('install', e => {
@@ -47,23 +47,51 @@ self.addEventListener('fetch', e => {
   })());
 });
 
-/* Toque na notificação: abre (ou traz para frente) o app */
-self.addEventListener('notificationclick', e => {
-  e.notification.close();
-  const action = e.action, data = e.notification.data || {};
-  e.waitUntil((async () => {
-    const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const client = all.find(c => new URL(c.url).origin === location.origin);
-    if (client) { await client.focus(); client.postMessage({ tipo: 'notificacao', action, key: data.key }); }
-    else await self.clients.openWindow('/' + (data.key ? '?abrir=' + encodeURIComponent(data.key) : '') + '#today');
-  })());
+/* Notificação chegando do servidor (app fechado): som, vibração e botões */
+self.addEventListener('push', e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: 'NOVA', body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.title || 'NOVA', {
+    body: d.body || '',
+    tag: d.tag || 'nova-' + Date.now(),
+    renotify: true,                        // toca de novo mesmo se já houver uma igual
+    data: { key: d.key || '', title: d.title || '', body: d.body || '' },
+    icon: '/icons/icon-192.png',           // ícone grande (como a foto no WhatsApp)
+    badge: '/icons/badge-96.png',          // ícone pequeno na barra de status (Android)
+    vibrate: d.importante ? [250, 100, 250, 100, 250] : [180, 80, 180],
+    timestamp: d.ts || Date.now(),
+    requireInteraction: !!d.importante,    // importantes ficam na tela até você tocar
+    silent: false,
+    actions: Array.isArray(d.actions) ? d.actions.slice(0, 2) : [],
+  }));
 });
 
-/* Pronto para receber avisos com o app fechado (Web Push) quando o servidor for ligado */
-self.addEventListener('push', e => {
-  let d = {}; try { d = e.data ? e.data.json() : {}; } catch (err) { d = { title: 'NOVA', body: e.data && e.data.text() }; }
-  e.waitUntil(self.registration.showNotification(d.title || 'NOVA', {
-    body: d.body || '', tag: d.tag, data: { key: d.key }, icon: '/icons/icon-192.png', badge: '/icons/icon-192.png',
-    requireInteraction: !!d.persistent,
-  }));
+/* Toque na notificação ou num dos botões */
+self.addEventListener('notificationclick', e => {
+  const action = e.action, data = e.notification.data || {};
+  e.notification.close();
+  e.waitUntil((async () => {
+    const all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const mine = all.filter(c => new URL(c.url).origin === location.origin);
+    const visible = mine.find(c => c.visibilityState === 'visible');
+
+    // "Adiar 30 min" com o app fechado: o servidor agenda de novo, sem abrir nada
+    if (action === 'snooze' && !visible) {
+      try {
+        const sub = await self.registration.pushManager.getSubscription();
+        const r = sub && await fetch('/api/push-acao', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ op: 'snooze', endpoint: sub.endpoint, key: data.key, title: data.title, body: data.body }) });
+        await self.registration.showNotification('⏰ Combinado!', { body: r && r.ok ? 'Vou lembrar de novo em 30 minutos.' : 'Não consegui adiar. Abra o NOVA para remarcar.', tag: 'nova-adiado', icon: '/icons/icon-192.png', badge: '/icons/badge-96.png', silent: true });
+      } catch (err) { }
+      return;
+    }
+    const client = visible || mine[0];
+    if (client) {
+      await client.focus().catch(() => {});
+      client.postMessage({ tipo: 'notificacao', action: action || 'open', key: data.key });
+      return;
+    }
+    const q = data.key ? (action === 'done' ? '?acao=done&abrir=' : '?abrir=') + encodeURIComponent(data.key) : '';
+    await self.clients.openWindow('/' + q + '#today');
+  })());
 });
