@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0F7C7A">
+<meta name="description" content="Agenda, tarefas, planner e lembretes. O NOVA organiza, lembra e ajuda você a executar.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icons/favicon-64.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NOVA">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>NOVA — organize, lembre, execute</title>
 <script>
 /* ================= CONFIGURAÇÃO DO SUPABASE =================
@@ -283,6 +291,7 @@ details.block[open] summary{margin-bottom:10px}
 .tg-head button{padding:10px 8px;font-size:13px;color:var(--ink-2);border:0;border-left:1px solid var(--line-2);background:none;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px}
 .tg-head button.today{color:var(--accent);font-weight:600}
 .tg-head button:hover{background:var(--surface-2)}
+.howto{margin:10px 0 18px;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.45}
 /* ============ ASSISTENTE (IA) ============ */
 .ai-bar{margin:0 0 18px}
 .ai-in{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:6px 6px 6px 14px;box-shadow:var(--shadow);transition:border-color .15s}
@@ -1208,7 +1217,8 @@ const BrowserChannel = {
   async request() { try { return await Notification.requestPermission(); } catch (e) { return 'denied'; } },
   show(msg, f) {
     if (!Store.state.settings.notif.browser || this.permission() !== 'granted') return;
-    try { const n = new Notification(msg.title, { body: msg.body || '', tag: f.key, requireInteraction: !!msg.persistent }); n.onclick = () => { window.focus(); n.close(); }; } catch (e) { }
+    const fallback = () => { try { const n = new Notification(msg.title, { body: msg.body || '', tag: f.key, requireInteraction: !!msg.persistent, icon: '/icons/icon-192.png' }); n.onclick = () => { window.focus(); n.close(); }; } catch (e) { } };
+    if (typeof Pwa !== 'undefined' && Pwa.canUse()) Pwa.notify(msg, f).then(ok => { if (!ok) fallback(); }).catch(fallback); else fallback();
   },
 };
 
@@ -1704,6 +1714,7 @@ const Views = {
         <div class="seg" style="margin:6px 0 4px">${[['auto', 'Automático'], ['light', '☀️ Claro'], ['dark', '🌙 Escuro']].map(([k, l]) => `<button data-act="set-theme" data-v="${k}" aria-pressed="${s.settings.theme === k}">${l}</button>`).join('')}</div>
         <div class="swatches">${Object.entries(ACCENTS).map(([k, [l, c]]) => `<button class="swatch" style="background:${c}" data-act="set-accent" data-v="${k}" aria-pressed="${s.settings.accent === k}" aria-label="Cor ${l}" title="${l}"></button>`).join('')}</div>
       </div>
+      ${Pwa.section()}
       <div class="settings-sec"><h2>Notificações</h2>
         ${tg('settings.notif.enabled', n.enabled, 'Notificações ativadas')}
         <label class="toggle"><span>Avisos do navegador<small>${perm === 'granted' ? 'Permitido neste navegador.' : perm === 'denied' ? 'Bloqueado pelo navegador. Libere nas permissões do site.' : perm === 'unsupported' ? 'Este navegador não oferece avisos.' : 'Mostra avisos mesmo com a aba em segundo plano.'}</small></span><input type="checkbox" class="switch" data-change="notif-browser" ${n.browser && perm === 'granted' ? 'checked' : ''} ${perm === 'unsupported' || perm === 'denied' ? 'disabled' : ''}></label>
@@ -2164,6 +2175,98 @@ const Ai = {
   markMic(where, on) { $$(`.ai-mic[data-w="${where}"]`).forEach(b => b.classList.toggle('on', on)); },
 };
 /* =====================================================================
+   NOVA · pwa.js — instalar como aplicativo, funcionar sem internet,
+   avisar quando há versão nova e mostrar notificações pelo sistema.
+   ===================================================================== */
+const Pwa = {
+  reg: null, deferred: null, waiting: null,
+  standalone() { return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; },
+  ios() { return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); },
+  canUse() { return 'serviceWorker' in navigator && /^https?:$/.test(location.protocol) && !/claude\.ai|claudeusercontent|anthropic/.test(location.hostname); },
+
+  init() {
+    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); this.deferred = e; this.refresh(); });
+    window.addEventListener('appinstalled', () => { this.deferred = null; UI.snack('NOVA instalado! Agora ele abre como aplicativo.'); this.refresh(); });
+    if (this.canUse()) {
+      navigator.serviceWorker.register('/sw.js').then(reg => {
+        this.reg = reg;
+        if (reg.waiting && navigator.serviceWorker.controller) this.updateReady(reg.waiting);
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing; if (!nw) return;
+          nw.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) this.updateReady(nw); });
+        });
+        setInterval(() => reg.update().catch(() => { }), 60 * 60000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => { }); });
+      }).catch(() => { });
+      let reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => { if (reloading) return; reloading = true; location.reload(); });
+      navigator.serviceWorker.addEventListener('message', e => {
+        const m = e.data || {}; if (m.tipo !== 'notificacao') return;
+        Actions.nt({ op: m.action || 'open', key: m.key || '' }, { closest: () => null });
+      });
+    }
+    // atalhos e toque em notificação com o app fechado
+    const q = new URLSearchParams(location.search);
+    if (q.get('abrir')) setTimeout(() => { const k = q.get('abrir'); if (Tasks.get(k)) Modals.editor(k); }, 400);
+    if (q.get('novo')) setTimeout(() => Modals.capture({}), 400);
+    if (q.has('abrir') || q.has('novo') || q.has('app')) history.replaceState(null, '', location.pathname + location.hash);
+  },
+
+  updateReady(worker) {
+    this.waiting = worker;
+    const box = $('#toasts'); if (!box || box.querySelector('.upd')) return;
+    const el = document.createElement('div'); el.className = 'toast persist upd';
+    el.innerHTML = '<b>✨ Nova versão do NOVA</b><p>Toque em atualizar para usar as novidades.</p><div class="acts"><button class="btn sm primary">Atualizar</button><button class="btn sm ghost">Depois</button></div>';
+    el.querySelector('.primary').onclick = () => { el.remove(); worker.postMessage('atualizar'); };
+    el.querySelector('.ghost').onclick = () => el.remove();
+    box.appendChild(el);
+  },
+
+  async install() {
+    if (this.deferred) {
+      this.deferred.prompt();
+      const r = await this.deferred.userChoice.catch(() => null);
+      this.deferred = null; this.refresh();
+      if (r && r.outcome === 'accepted') return;
+      return;
+    }
+    this.howTo();
+  },
+  howTo() {
+    const ios = this.ios();
+    UI.open(`<button class="btn ghost icon x" data-act="close-modal" aria-label="Fechar">${icon('x')}</button>
+      <h2>Instalar o NOVA</h2><p class="sub">Fica com ícone na tela inicial e abre em tela cheia, como um aplicativo.</p>
+      <ol class="howto">${ios
+        ? `<li>Abra este site no <b>Safari</b>.</li><li>Toque no botão <b>Compartilhar</b> (quadrado com seta para cima), na barra de baixo.</li><li>Role e toque em <b>Adicionar à Tela de Início</b>.</li><li>Toque em <b>Adicionar</b>.</li>`
+        : `<li>No <b>Chrome</b> ou <b>Edge</b>, abra o menu do navegador (<b>⋮</b>).</li><li>Toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</li><li>Confirme em <b>Instalar</b>.</li><li>No computador, também aparece um ícone de instalar na barra de endereço.</li>`}</ol>
+      <div class="dialog-foot"><button class="btn primary" data-act="close-modal">Entendi</button></div>`, { label: 'Instalar o NOVA', cls: 'sm' });
+  },
+  refresh() { if (App.route === 'settings' && !UI.isOpen()) App.render(); const b = $('#side-install'); if (b) b.hidden = !this.offer(); },
+  offer() { return this.canUse() && !this.standalone() && (!!this.deferred || this.ios()); },
+
+  // seção em Configurações
+  section() {
+    if (!this.canUse()) return '';
+    const st = this.standalone();
+    return `<div class="settings-sec"><h2>Aplicativo</h2>
+      <p class="muted" style="margin:6px 0 12px">${st ? '✅ Você está usando o NOVA como aplicativo.' : 'Instale o NOVA para ter o ícone na tela inicial, abrir em tela cheia e usar mesmo sem internet.'}</p>
+      ${st ? '' : `<div style="padding-bottom:6px"><button class="btn primary" data-act="pwa-install">${icon('plus', 16)}Instalar aplicativo</button></div>`}
+    </div>`;
+  },
+
+  // notificação pelo sistema (funciona melhor no celular e com o app em segundo plano)
+  async notify(msg, f) {
+    const reg = this.reg || (this.canUse() ? await navigator.serviceWorker.getRegistration().catch(() => null) : null);
+    if (!reg || !reg.showNotification) return false;
+    const acts = (msg.actions || []).filter(a => ['done', 'snooze', 'open'].includes(a[0])).slice(0, 2).map(a => ({ action: a[0], title: a[1] }));
+    await reg.showNotification(msg.title, {
+      body: msg.body || '', tag: f.key, renotify: true, data: { key: f.inst ? f.inst.key : '' },
+      icon: '/icons/icon-192.png', badge: '/icons/icon-192.png', requireInteraction: !!msg.persistent, actions: acts,
+    });
+    return true;
+  },
+};
+/* =====================================================================
    NOVA — aplicação: navegação, ações, modais e eventos
    ===================================================================== */
 const NAV = [
@@ -2210,7 +2313,7 @@ const App = {
     if (this.isMobile()) this.params.agenda.view = 'month';
     this.renderShell(); this.render(true); this.bind();
     if (!Store.state.user.onboarded) Onboarding.show();
-    Notify.start(); Sync.init();
+    Notify.start(); Sync.init(); Pwa.init();
     setInterval(() => { if (!UI.isOpen() && !document.hidden && !$('.focus') && !document.activeElement.matches('input,textarea,select')) this.render(); }, 60000);
   },
   applyTheme() {
@@ -2228,6 +2331,7 @@ const App = {
     const s = Store.state;
     $('#sidebar').innerHTML = `<div class="brand"><i class="brand-mark"></i><span>NOVA</span></div>
       ${NAV.map(([k, l, ic], idx) => `${idx === 5 || idx === 9 ? '<div class="nav-sep"></div>' : ''}<button class="nav-btn" data-act="go" data-r="${k}" title="${l}">${icon(ic)}<span class="lbl">${l}</span><span class="count" data-count="${k}"></span></button>`).join('')}
+      <button class="nav-btn" id="side-install" data-act="pwa-install" title="Instalar app" ${Pwa.offer() ? '' : 'hidden'}>${icon('plus')}<span class="lbl">Instalar app</span></button>
       <button class="side-capture" data-act="capture" title="Nova tarefa (N)">${icon('plus')}<span class="lbl">Nova tarefa</span></button>
       <div class="sync" id="sync"><i></i><span>Salvo neste dispositivo</span></div>`;
     $('#topbar').innerHTML = `<div class="brand"><i class="brand-mark"></i><span>NOVA</span></div>
@@ -2313,6 +2417,7 @@ const Actions = {
   go: d => App.go(d.r),
   'close-modal': () => UI.close(),
   capture: d => Modals.capture({ date: d.date, time: d.time, project: d.project, type: d.type }),
+  'pwa-install': () => Pwa.install(),
   'ai-send': d => Ai.send(d.w),
   'ai-mic': d => Ai.mic(d.w),
   'ai-example': d => Ai.send('page', d.text),
