@@ -297,6 +297,10 @@ details.block[open] summary{margin-bottom:10px}
 .push-tip{margin-top:12px;font-size:14px}
 .push-tip summary{cursor:pointer;color:var(--accent);font-weight:600}
 .push-tip ol{padding-left:20px;line-height:1.5;color:var(--ink-2)}
+.pw-wrap{position:relative}
+.pw-wrap .input{padding-right:48px}
+.pw-eye{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:40px;height:36px;border:0;background:none;color:var(--ink-3);display:grid;place-items:center;border-radius:8px;cursor:pointer}
+.pw-eye:hover,.pw-eye[aria-pressed="true"]{color:var(--accent)}
 .howto{margin:10px 0 18px;padding-left:22px;display:flex;flex-direction:column;gap:10px;font-size:15px;line-height:1.45}
 /* ============ ASSISTENTE (IA) ============ */
 .ai-bar{margin:0 0 18px}
@@ -1809,38 +1813,51 @@ const Cloud = {
   /* Portão de entrada: só libera o app depois do login */
   async gate() {
     this.recovery = /type=recovery/.test(location.hash);
+    const last = this.lastUser();
     try { await this.loadLib(); }
-    catch (e) { this.screen('erro', 'Não foi possível conectar. Verifique sua internet e recarregue a página.'); return new Promise(() => { }); }
+    catch (e) {
+      if (last) { this.offline = true; return new Promise(resolve => { this.resolve = resolve; this.enter(last, true); }); }
+      this.screen('erro', 'Não foi possível conectar. Verifique sua internet e recarregue a página.'); return new Promise(() => { });
+    }
     const c = this.cfg();
     this.sb = window.supabase.createClient(c.supabaseUrl, c.supabaseAnonKey, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
     return new Promise(resolve => {
       this.resolve = resolve;
       this.sb.auth.onAuthStateChange((ev, session) => {
         if (ev === 'PASSWORD_RECOVERY') { this.recovery = true; this.screen('nova-senha'); }
-        if (ev === 'SIGNED_OUT' && this.user) location.reload();
+        if (ev === 'SIGNED_OUT' && this.user && this.leaving) location.reload();
+        if (session && session.user && this.offline && this.user && session.user.id === this.user.id) { this.offline = false; this.start(); }
         if (session && session.user && this.user && session.user.id !== this.user.id) location.reload();
       });
-      this.sb.auth.getSession().then(({ data }) => {
+      const fallback = () => { if (last && !this.recovery) { this.offline = true; this.enter(last, true); } else this.screen('entrar'); };
+      Promise.race([this.sb.auth.getSession(), new Promise((_, no) => setTimeout(() => no(new Error('lento')), 6000))]).then(({ data, error }) => {
         const session = data && data.session;
         if (this.recovery) return this.screen('nova-senha');
-        if (session) this.enter(session.user); else this.screen('entrar');
-      }).catch(() => this.screen('entrar'));
+        if (session) this.enter(session.user);
+        else if (error && last) fallback();            // sem internet para renovar: entra com a cópia do aparelho
+        else this.screen('entrar');
+      }).catch(fallback);
     });
   },
 
   /* Usuário autenticado: prepara os dados dele e abre o app */
-  async enter(user) {
-    this.user = user;
+  lastUser() { try { const u = JSON.parse(localStorage.getItem('nova:ultimo-usuario') || 'null'); return u && u.id && localStorage.getItem('nova:v1:' + u.id) ? u : null; } catch (e) { return null; } },
+  async enter(user, quick) {
+    this.user = { id: user.id, email: user.email };
+    try { localStorage.setItem('nova:ultimo-usuario', JSON.stringify(this.user)); } catch (e) { }
     Store.KEY = 'nova:v1:' + user.id;
     let hasLocal = false; try { hasLocal = !!localStorage.getItem(Store.KEY); } catch (e) { }
     // aproveita dados usados antes do login (não perde nada)
     if (!hasLocal) { try { const old = localStorage.getItem('nova:v1'); if (old) { localStorage.setItem(Store.KEY, old); localStorage.setItem('nova:v1:copiado-para', user.id); } } catch (e) { } }
     Store.state = null; Store.load();
-    this.msg('Carregando seus dados…');
-    try {
-      const remote = await this.fetch();
-      if (remote && remote.ms > (Store.state.updatedAt || 0)) { Store.state = migrate(remote.dados); Store.persistLocal(); }
-    } catch (e) { console.warn('[NOVA] sem conexão; usando a cópia deste aparelho', e); }
+    if (!hasLocal && !quick) {                        // primeira vez neste aparelho: espera os dados da nuvem
+      this.msg('Carregando seus dados…');
+      try {
+        const remote = await this.fetch();
+        if (remote && remote.ms > (Store.state.updatedAt || 0)) { Store.state = migrate(remote.dados); Store.persistLocal(); }
+      } catch (e) { console.warn('[NOVA] sem conexão; usando a cópia deste aparelho', e); }
+      this.fetched = true;
+    }
     const el = $('.onb'); if (el && el.dataset.cloud) el.remove();
     const r = this.resolve; this.resolve = null; if (r) r();
   },
@@ -1855,17 +1872,24 @@ const Cloud = {
 
   /* Chamado por Sync.init depois que o app abriu */
   start() {
-    Sync.mode = 'supabase'; Sync.status = 'cloud'; App.renderSync();
-    if ((Store.state.updatedAt || 0) > this.remoteMs) this.push(true);
+    Sync.mode = 'supabase'; Sync.status = this.offline ? 'local' : 'cloud'; App.renderSync();
+    if (this.offline || !this.sb) return this.bindOnce();
+    (this.fetched ? Promise.resolve() : this.pull(true)).then(() => { if ((Store.state.updatedAt || 0) > this.remoteMs) this.push(true); });
+    this.bindOnce();
+  },
+  bindOnce() {
+    if (this.bound) return; this.bound = true;
     const pull = () => this.pull();
     document.addEventListener('visibilitychange', () => { if (!document.hidden) pull(); });
     window.addEventListener('focus', pull);
     window.addEventListener('online', () => { this.pull(); if (this.pending) this.push(true); });
     clearInterval(this.pullTimer); this.pullTimer = setInterval(pull, 120000);
+    window.addEventListener('online', () => { if (this.offline && this.sb) this.sb.auth.getSession().then(({ data }) => { if (data && data.session) { this.offline = false; this.start(); } }).catch(() => { }); });
   },
 
   push(now) {
     if (!this.user) return;
+    if (this.offline || !this.sb) { this.pending = true; return; }
     this.pending = true; clearTimeout(this.timer);
     this.timer = setTimeout(() => this.save(), now ? 0 : 1500);
   },
@@ -1882,7 +1906,7 @@ const Cloud = {
     this.saving = false;
   },
   async pull(force) {
-    if (!this.user || this.saving) return;
+    if (!this.user || this.saving || this.offline || !this.sb) return;
     if (!force && (UI.isOpen() || $('.focus'))) return;
     try {
       const remote = await this.fetch();
@@ -1906,6 +1930,7 @@ const Cloud = {
       UI.snack('Sem conexão: seus dados ficam guardados neste aparelho até a próxima entrada.');
     }
     if (typeof Push !== 'undefined') await Push.forget();
+    this.leaving = true; try { localStorage.removeItem('nova:ultimo-usuario'); } catch (e) { }
     const u = this.user; this.user = null;
     await this.sb.auth.signOut().catch(() => { });
     if (u) location.reload();
@@ -1923,9 +1948,23 @@ const Cloud = {
     if (/fetch|network/i.test(m)) return 'Sem conexão com a internet.';
     return 'Não foi possível concluir. Tente novamente.';
   },
+  pw(id, ac, ph) {
+    return `<div class="pw-wrap"><input class="input" type="password" id="${id}" autocomplete="${ac}" placeholder="${ph}"><button type="button" class="pw-eye" data-pw="${id}" aria-label="Mostrar senha" aria-pressed="false">${this.eye(false)}</button></div>`;
+  },
+  eye(open) {
+    return `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>${open ? '' : '<path d="M4 20L20 4"/>'}</svg>`;
+  },
   card() {
     let el = $('.onb[data-cloud]');
-    if (!el) { el = document.createElement('div'); el.className = 'onb'; el.dataset.cloud = '1'; document.body.appendChild(el); }
+    if (!el) {
+      el = document.createElement('div'); el.className = 'onb'; el.dataset.cloud = '1'; document.body.appendChild(el);
+      el.addEventListener('click', e => {
+        const b = e.target.closest('.pw-eye'); if (!b) return;
+        const inp = document.getElementById(b.dataset.pw), show = inp.type === 'password';
+        inp.type = show ? 'text' : 'password'; b.setAttribute('aria-pressed', show); b.setAttribute('aria-label', show ? 'Esconder senha' : 'Mostrar senha');
+        b.innerHTML = this.eye(show); inp.focus();
+      });
+    }
     return el;
   },
   msg(t) { this.card().innerHTML = `<div class="onb-card"><div class="orbit"></div><h1>NOVA</h1><p>${esc(t)}</p></div>`; },
@@ -1938,7 +1977,7 @@ const Cloud = {
       const c = kind === 'criar';
       el.innerHTML = head(c ? 'Criar sua conta' : 'Entrar no NOVA', c ? 'Seus dados ficam guardados com segurança e aparecem em qualquer aparelho.' : 'Você coloca tudo na cabeça. O NOVA organiza, lembra e ajuda você a executar.') + `
         <label class="field"><span>E-mail</span><input class="input" type="email" id="cl-email" autocomplete="email" inputmode="email"></label>
-        <label class="field"><span>Senha</span><input class="input" type="password" id="cl-pass" autocomplete="${c ? 'new-password' : 'current-password'}" placeholder="${c ? 'Mínimo de 6 caracteres' : ''}"></label>
+        <label class="field"><span>Senha</span>${this.pw('cl-pass', c ? 'new-password' : 'current-password', c ? 'Mínimo de 6 caracteres' : '')}</label>
         ${note}
         <div class="foot"><button class="btn primary" id="cl-go">${c ? 'Criar conta' : 'Entrar'}</button>
           <button class="btn ghost" id="cl-switch">${c ? 'Já tenho conta' : 'Criar conta'}</button></div>
@@ -1985,8 +2024,8 @@ const Cloud = {
     }
     if (kind === 'nova-senha') {
       el.innerHTML = head('Criar nova senha', 'Escolha uma senha nova para sua conta.') + `
-        <label class="field"><span>Nova senha</span><input class="input" type="password" id="cl-pass" autocomplete="new-password" placeholder="Mínimo de 6 caracteres"></label>
-        <label class="field"><span>Repita a senha</span><input class="input" type="password" id="cl-pass2" autocomplete="new-password"></label>${note}
+        <label class="field"><span>Nova senha</span>${this.pw('cl-pass', 'new-password', 'Mínimo de 6 caracteres')}</label>
+        <label class="field"><span>Repita a senha</span>${this.pw('cl-pass2', 'new-password', '')}</label>${note}
         <div class="foot"><button class="btn primary" id="cl-go">Salvar senha</button></div></div>`;
       $('#cl-pass').focus();
       $('#cl-go').onclick = async () => {
