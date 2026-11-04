@@ -232,7 +232,7 @@ details.block[open] summary{margin-bottom:10px}
 
 /* ============ AGENDA ============ */
 .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
-.toolbar .title{font:700 24px/1.1 var(--f-display);letter-spacing:-.015em;margin-right:auto;text-transform:capitalize}
+.toolbar .title{font:700 24px/1.1 var(--f-display);letter-spacing:-.015em;margin-right:auto}
 .ag-sum{display:flex;align-items:center;gap:8px 22px;flex-wrap:wrap;font-size:14px;color:var(--ink-2);margin:-4px 0 14px}
 .ag-sum b{color:var(--ink);font-weight:700}
 .ag-sum .spacer{flex:1}
@@ -266,7 +266,7 @@ details.block[open] summary{margin-bottom:10px}
 .agday{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:18px;position:sticky;top:18px}
 .agday.compact{position:static;margin-bottom:12px}
 .agday .dc-h{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
-.agday h2{margin:0;font:700 17px/1.25 var(--f-display);text-transform:capitalize}
+.agday h2{margin:0;font:700 17px/1.25 var(--f-display)}
 .agday .dc-h p{margin:4px 0 0;font-size:13px;color:var(--ink-2)}
 .agday.st-free .dc-h p{color:var(--ok);font-weight:600}
 .dc-list{display:flex;flex-direction:column;gap:6px}
@@ -584,6 +584,87 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px}
   .filters .chip{flex:none}
   .plan-item{grid-template-columns:76px 1fr}
   .plan-item>:last-child{grid-column:2}
+}
+
+/* ============ HOJE · card "Seu dia" ============ */
+.myday .list{box-shadow:none;background:none;border:0}
+.myday{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:18px 18px 14px;margin-bottom:22px}
+.md-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.md-h h2{margin:0;font:700 20px/1.2 var(--f-display)}
+.md-h span{font-size:13px;color:var(--ink-2)}
+.md-next{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:12px;width:100%;text-align:left;border:0;border-radius:14px;padding:14px 16px;margin-bottom:12px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.md-next.event{background:var(--event);color:var(--surface)}
+.md-next .md-when{grid-row:1/3;align-self:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;background:rgba(255,255,255,.18);padding:6px 9px;border-radius:9px;white-space:nowrap}
+.md-next b{font-size:17px;font-weight:700;line-height:1.25;overflow:hidden;text-overflow:ellipsis}
+.md-next small{opacity:.8;font-size:13px}
+.md-list{margin:0 -4px}
+.md-empty{text-align:center;padding:14px 8px 6px;color:var(--ink-2)}
+.md-empty p{margin:0 0 10px}
+.md-up{border-top:1px solid var(--line-2);margin-top:12px;padding-top:12px}
+.md-up h3{margin:0 0 6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3)}
+.md-up-row{display:grid;grid-template-columns:62px 50px 1fr;gap:6px;align-items:center;width:100%;border:0;background:none;padding:8px 2px;text-align:left;color:var(--ink);font-size:14px;border-radius:8px;cursor:pointer}
+.md-up-row:hover{background:var(--surface-2)}
+.md-up-d{color:var(--ink-2);font-size:13px;text-transform:capitalize}
+.md-up-t{font-weight:700;font-variant-numeric:tabular-nums}
+.md-up-n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.md-up .btn{margin-top:4px;padding-left:2px}
+
+/* ============ AGENDA · Lista ============ */
+.ls-strip{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 10px;margin:0 -2px 6px;scrollbar-width:none;scroll-snap-type:x proximity}
+.ls-strip::-webkit-scrollbar{display:none}
+.ls-day{flex:none;width:52px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:8px 0 6px;border-radius:14px;border:1px solid var(--line-2);background:var(--surface);color:var(--ink);scroll-snap-align:start;cursor:pointer}
+.ls-day small{font-size:11px;color:var(--ink-3);text-transform:uppercase;font-weight:600}
+.ls-day b{font-size:18px;font-weight:700}
+.ls-day i{font-style:normal;font-size:10px;height:13px;color:var(--event);font-weight:800;letter-spacing:1px;line-height:13px}
+.ls-day.st-free i{color:var(--ok);font-weight:700;letter-spacing:0}
+.ls-day.today{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ls-day.today small,.ls-day.today i{color:inherit;opacity:.9}
+.ls-list{display:flex;flex-direction:column;gap:10px}
+.ls-card{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:12px 14px 12px;scroll-margin-top:80px}
+.ls-card.today{box-shadow:var(--shadow),inset 3px 0 0 var(--accent)}
+.ls-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.ls-h h3{margin:0;font-size:16px;font-weight:700}
+.ls-h h3 span{font-weight:500;color:var(--ink-3);font-size:14px;margin-left:4px;text-transform:none}
+.ls-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;border-radius:12px;padding:11px 12px;margin-top:6px;background:var(--surface-2);color:var(--ink);font-size:15px;cursor:pointer}
+.ls-item.event{background:var(--event);color:var(--surface)}
+.ls-item.done{opacity:.5}.ls-item.done b{text-decoration:line-through}
+.ls-t{font-weight:800;font-variant-numeric:tabular-nums;min-width:46px;font-size:15px}
+.ls-b{flex:1;min-width:0}
+.ls-b b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ls-b small{opacity:.7;font-size:12px}
+.ls-loose{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ls-loose button{border:1px solid var(--line);background:none;border-radius:999px;padding:5px 11px;font-size:13px;color:var(--ink-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.ls-loose span{font-size:13px;color:var(--ink-3);align-self:center}
+.ls-free{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:1.5px dashed color-mix(in srgb,var(--ok) 40%,transparent);background:color-mix(in srgb,var(--ok) 5%,transparent);border-radius:14px;padding:11px 14px;color:var(--ink-2);font-size:14px;cursor:pointer}
+.ls-free b{color:var(--ok);text-transform:capitalize}
+.ls-free-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.ls-free>span:nth-child(2){flex:1}
+.ls-add{color:var(--ok);display:flex}
+.ls-more{width:100%;justify-content:center;margin-top:12px}
+.mev-m{display:none}.mev-more{display:none}
+
+/* ============ Menu do + ============ */
+.plus h2{outline:none}
+.plus .ai-bar{margin:6px 0 4px}
+.plus-tip{font-size:13px;color:var(--ink-3);margin:6px 2px 16px}
+.plus-sep{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin:6px 0 10px}
+.plus-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.plus-opt{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:14px;color:var(--ink);cursor:pointer;min-height:92px;transition:border-color .15s,background .15s}
+.plus-opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+.plus-opt .pe{font-size:24px;line-height:1;margin-bottom:6px}
+.plus-opt b{font-size:15px;font-weight:700}
+.plus-opt small{font-size:12.5px;color:var(--ink-3);line-height:1.3}
+.plus-opt.wide{grid-column:1/-1;flex-direction:row;align-items:center;min-height:0;gap:12px}
+.plus-opt.wide .pe{margin:0}
+
+@media (max-width:759px){
+  .myday{padding:16px 14px 12px;border-radius:18px}
+  .today-head .head-actions{width:100%}
+  .today-head .head-actions .btn{flex:1;justify-content:center}
+  .mcell{min-height:64px}
+  .mev-m{display:block;font-size:10.5px;font-weight:700;background:var(--event);color:var(--surface);border-radius:5px;padding:1px 4px;font-variant-numeric:tabular-nums;max-width:100%;overflow:hidden}
+  .mev-more{display:block;font-size:10px;color:var(--ink-2);font-weight:700}
+  .mcell.st-free:not(.past):not(.out) .dnum{color:var(--ok)}
 }
 </style>
 </head>
@@ -1409,9 +1490,15 @@ const Views = {
     if (timed.length && !nowPlaced && nm < full.end) tl += `<div class="now-line"><span>${fromMin(nm)}</span><i></i></div>`;
     const routines = s.routines.filter(r => (r.days || []).includes(new Date().getDay()));
     const demoN = Demo.count();
+    // próximo compromisso/tarefa com horário
+    const next = timed.find(i => !i.done && toMin(i.time) + Math.max(i.dur, 1) > nm);
+    const nextLbl = next ? (toMin(next.time) <= nm ? 'Agora' : 'Em ' + fmtDur(toMin(next.time) - nm)) : '';
+    const evToday = timed.filter(i => i.t.type === 'event').length, tasksToday = st.insts.filter(i => i.t.type !== 'event' && !i.done).length;
+    // próximos compromissos dos outros dias
+    const upcoming = []; for (let k = 1; k <= 45 && upcoming.length < 4; k++) { const d = addDays(T, k); Tasks.on(d).filter(i => i.t.type === 'event' && !i.done).forEach(i => upcoming.length < 4 && upcoming.push(i)); }
+    const dayLabel = d => relDay(d) === 'Amanhã' ? 'Amanhã' : `${DOW_S[parseYmd(d).getDay()]} ${parseYmd(d).getDate()}/${pad(parseYmd(d).getMonth() + 1)}`;
     return `<section class="page today">
       ${Push.hint()}
-      ${demoN ? `<div class="hint" style="margin-bottom:18px"><p>Seu NOVA ainda tem ${demoN} itens de exemplo (tarefas, notas e rotinas de demonstração).</p><button class="btn primary" data-act="demo-clear">Remover exemplos</button></div>` : ''}
       <header class="today-head">
         <div><h1 class="greet">${hello}${s.user.name ? ', ' + esc(s.user.name) : ''}${emo}</h1><p class="date">${fmtLong(T)}</p></div>
         <div class="head-actions">
@@ -1420,6 +1507,24 @@ const Views = {
         </div>
       </header>
       ${Ai.bar('today')}
+      <section class="myday" aria-label="Seu dia">
+        <div class="md-h"><h2>Seu dia</h2><span>${evToday ? evToday + (evToday === 1 ? ' compromisso' : ' compromissos') : 'Nenhum compromisso'} · ${tasksToday} ${tasksToday === 1 ? 'tarefa' : 'tarefas'}</span></div>
+        ${next ? `<button class="md-next${next.t.type === 'event' ? ' event' : ''}" data-act="edit" data-key="${next.key}"><span class="md-when">${nextLbl}</span><b>${esc(next.t.title)}</b><small>${next.time}${next.dur ? ' – ' + fromMin(toMin(next.time) + next.dur) : ''}${next.t.type === 'event' ? ' · compromisso' : ''}</small></button>` : ''}
+        ${timed.length ? `<div class="tl list md-list">${tl}</div>` : `<div class="md-empty"><p>Nada marcado com horário hoje. ✨</p><button class="btn sm primary" data-act="plus">${icon('plus', 16)}Agendar algo</button></div>`}
+        <div class="md-up"><h3>Próximos compromissos</h3>
+          ${upcoming.length ? upcoming.map(i => `<button class="md-up-row" data-act="edit" data-key="${i.key}"><span class="md-up-d">${dayLabel(i.date)}</span><span class="md-up-t">${i.time || '—'}</span><span class="md-up-n">${esc(i.t.title)}</span></button>`).join('') : '<p class="muted">Nada marcado nos próximos dias.</p>'}
+          <button class="btn ghost sm" data-act="go" data-r="agenda">Ver agenda ${icon('right', 14)}</button>
+        </div>
+      </section>
+      ${C.hint(Hints.forToday())}
+      ${df.length ? `<section class="block"><h2>🧠 Não esquecer <span class="muted">${df.length}</span></h2><div class="dontforget">${df.map(t => { const d = t.recurrence ? Parser.firstOccurrence(t.recurrence, T, new Date()) : t.date; return `<button class="df-card" data-act="edit" data-key="${t.id}@${t.recurrence ? d : (t.date || 'none')}"><div><b>${esc(t.title)}</b><small>${d ? relDay(d) + (t.time ? ' às ' + t.time : '') : 'Sem data'}</small></div></button>`; }).join('')}</div></section>` : ''}
+      <section class="block"><h2>Tarefas de hoje <span class="muted">${untimed.length || ''}</span></h2>
+        ${C.list(untimed, { empty: 'Nenhuma tarefa sem horário. <br><button class="btn sm" data-act="plus">Adicionar</button>' })}
+      </section>
+      ${overdue.length ? `<section class="block" id="late"><div class="block-h">Atrasadas <span class="muted">${overdue.length}</span><span class="spacer"></span><button class="btn sm" data-act="rollover" data-date="${T}">Reagendar todas</button></div>${C.list(overdue, { showDate: true })}</section>` : ''}
+      ${routines.length ? `<section class="block"><h2>Rotinas de hoje</h2><div class="routines-today">${routines.map(r => this.routineCard(r, T, true)).join('')}</div></section>` : ''}
+      ${done.length ? `<details class="block"><summary>${icon('check', 16)}Concluídas hoje (${done.length})</summary>${C.list(done)}</details>` : ''}
+      <section class="block"><h2>Como está seu dia</h2>
       <div class="daycard">
         <p class="day-sentence">${sentence}</p>
         <div class="daystrip" aria-hidden="true">
@@ -1432,21 +1537,9 @@ const Views = {
           <span><b>${st.pend.length}</b> ${st.pend.length === 1 ? 'tarefa pendente' : 'tarefas pendentes'}</span>
           <span><b>${st.done.length}</b> ${st.done.length === 1 ? 'concluída' : 'concluídas'}</span>
           <span><b>${st.events.length}</b> ${st.events.length === 1 ? 'compromisso' : 'compromissos'}</span>
-          <span class="legend"><i style="background:var(--event)"></i>compromisso</span>
-          <span class="legend"><i style="background:var(--accent)"></i>tarefa</span>
         </div>
-      </div>
-      ${C.hint(Hints.forToday())}
-      ${df.length ? `<section class="block"><h2>🧠 Não esquecer <span class="muted">${df.length}</span></h2><div class="dontforget">${df.map(t => { const d = t.recurrence ? Parser.firstOccurrence(t.recurrence, T, new Date()) : t.date; return `<button class="df-card" data-act="edit" data-key="${t.id}@${t.recurrence ? d : (t.date || 'none')}"><div><b>${esc(t.title)}</b><small>${d ? relDay(d) + (t.time ? ' às ' + t.time : '') : 'Sem data'}</small></div></button>`; }).join('')}</div></section>` : ''}
-      <section class="block"><h2>Na agenda <span class="muted">${timed.length || ''}</span></h2>
-        ${timed.length ? `<div class="tl list">${tl}</div>` : `<div class="empty">Nada com horário marcado hoje.<br><button class="btn sm" data-act="organize" data-date="${T}">Distribuir tarefas no dia</button></div>`}
-      </section>
-      <section class="block"><h2>Sem horário <span class="muted">${untimed.length || ''}</span></h2>
-        ${C.list(untimed, { empty: 'Tudo que é de hoje já tem horário. <br><button class="btn sm" data-act="capture">Adicionar tarefa</button>' })}
-      </section>
-      ${overdue.length ? `<section class="block" id="late"><div class="block-h">Atrasadas <span class="muted">${overdue.length}</span><span class="spacer"></span><button class="btn sm" data-act="rollover" data-date="${T}">Reagendar todas</button></div>${C.list(overdue, { showDate: true })}</section>` : ''}
-      ${routines.length ? `<section class="block"><h2>Rotinas de hoje</h2><div class="routines-today">${routines.map(r => this.routineCard(r, T, true)).join('')}</div></section>` : ''}
-      ${done.length ? `<details class="block"><summary>${icon('check', 16)}Concluídas hoje (${done.length})</summary>${C.list(done)}</details>` : ''}
+      </div></section>
+      ${demoN ? `<div class="hint" style="margin-top:22px"><p>Seu NOVA ainda tem ${demoN} ${demoN === 1 ? 'item' : 'itens'} de exemplo.</p><button class="btn sm" data-act="demo-clear">Remover exemplos</button></div>` : ''}
     </section>`;
   },
 
@@ -1477,8 +1570,10 @@ const Views = {
     const p = App.params.agenda, mobile = App.isMobile();
     const view = p.view, d = p.date;
     let title = '', body = '';
-    if (view === 'month') {
-      const dd = parseYmd(d); title = `${MONTHS[dd.getMonth()]} ${dd.getFullYear()}`;
+    if (view === 'list') {
+      title = 'Próximos dias'; body = this.listView(d);
+    } else if (view === 'month') {
+      const dd = parseYmd(d); title = `${MONTHS[dd.getMonth()].replace(/^./, c => c.toUpperCase())} ${dd.getFullYear()}`;
       body = this.month(dd, mobile);
     } else if (view === 'week') {
       const ws = weekStart(d), we = addDays(ws, 6), a = parseYmd(ws), b = parseYmd(we);
@@ -1491,7 +1586,7 @@ const Views = {
       ${Ai.bar('agenda')}
       <div class="toolbar">
         <h1 class="title">${esc(title)}</h1>
-        <div class="seg" role="group" aria-label="Visualização">${[['month', 'Mês'], ['week', 'Semana'], ['day', 'Dia']].map(([k, l]) => `<button data-act="agenda-view" data-v="${k}" aria-pressed="${view === k}">${l}</button>`).join('')}</div>
+        <div class="seg" role="group" aria-label="Visualização">${(mobile ? [['list', 'Lista'], ['month', 'Mês'], ['day', 'Dia']] : [['month', 'Mês'], ['week', 'Semana'], ['day', 'Dia'], ['list', 'Lista']]).map(([k, l]) => `<button data-act="agenda-view" data-v="${k}" aria-pressed="${view === k}">${l}</button>`).join('')}</div>
         <button class="btn icon" data-act="agenda-nav" data-n="-1" aria-label="Anterior">${icon('left')}</button>
         <button class="btn" data-act="agenda-nav" data-n="0">Hoje</button>
         <button class="btn icon" data-act="agenda-nav" data-n="1" aria-label="Próximo">${icon('right')}</button>
@@ -1516,7 +1611,7 @@ const Views = {
       const more = !mobile && info.events.length > 3 ? `<span class="mmore">+${info.events.length - 3} compromissos</span>` : '';
       const tcount = showTasks && !mobile && info.pend.length ? `<span class="mtasks">☑ ${info.pend.length} ${info.pend.length > 1 ? 'tarefas' : 'tarefa'}</span>` : '';
       const tag = !past && !out && info.state === 'free' ? `<span class="mfree">Livre</span>` : info.state === 'full' && !past ? `<span class="mfull" title="Dia cheio"></span>` : '';
-      const dots = mobile ? `<span class="mdots">${info.events.slice(0, 3).map(() => '<i class="event"></i>').join('')}${showTasks && info.pend.length ? '<i></i>' : ''}</span>` : '';
+      const dots = mobile ? (info.events.length ? `<span class="mev-m">${info.events[0].time ? info.events[0].time.replace(':00', 'h') : '•'}</span>${info.events.length > 1 ? `<span class="mev-more">+${info.events.length - 1}</span>` : ''}` : (showTasks && info.pend.length ? '<span class="mdots"><i></i></span>' : '')) : '';
       cells += `<button class="${cls}" data-act="agenda-pick" data-date="${day}" aria-label="${fmtLong(day)}: ${info.state === 'free' ? 'livre' : info.events.length + ' compromissos'}">
         <span class="mtop"><span class="dnum">${dObj.getDate()}</span>${tag}</span>${evs}${timedTasks}${more}${tcount}${dots}</button>`;
     }
@@ -1553,6 +1648,36 @@ const Views = {
     </aside>`;
   },
   dayList(day) { return this.dayCard(day, true); },
+  // Lista: dia a dia, compromissos à vista, dias livres agrupados
+  listView(from) {
+    const T = todayStr(), p = App.params.agenda, n = p.listDays || 30, start = from;
+    const strip = Array.from({ length: 14 }, (_, k) => addDays(start, k)).map(d => {
+      const info = this.dayInfo(d), o = parseYmd(d);
+      return `<button class="ls-day${d === T ? ' today' : ''} st-${info.state}" data-act="list-jump" data-date="${d}"><small>${DOW_S[o.getDay()]}</small><b>${o.getDate()}</b><i>${info.events.length ? '•'.repeat(Math.min(3, info.events.length)) : info.state === 'free' ? 'livre' : '·'}</i></button>`;
+    }).join('');
+    let html = '', freeRun = [];
+    const flush = () => {
+      if (!freeRun.length) return;
+      const a = freeRun[0], b = freeRun[freeRun.length - 1], lab = x => `${DOW_S[parseYmd(x).getDay()]} ${parseYmd(x).getDate()}`;
+      html += `<button class="ls-free" data-act="capture" data-date="${a}" data-type="event"><span class="ls-free-dot"></span><span><b>${freeRun.length === 1 ? (a === T ? 'Hoje' : lab(a)) : lab(a) + ' a ' + lab(b)}</b> · ${freeRun.length === 1 ? 'livre' : freeRun.length + ' dias livres'}</span><span class="ls-add">${icon('plus', 16)}</span></button>`;
+      freeRun = [];
+    };
+    for (let k = 0; k < n; k++) {
+      const d = addDays(start, k), info = this.dayInfo(d), o = parseYmd(d);
+      const timed = info.items.filter(i => i.time), loose = info.items.filter(i => !i.time && !i.done);
+      if (!timed.length && !loose.length) { freeRun.push(d); continue; }
+      flush();
+      const rel = relDay(d), cap = x => x.charAt(0).toUpperCase() + x.slice(1), head = rel === 'Hoje' || rel === 'Amanhã' ? `${rel} <span>${DOW[o.getDay()]}, ${o.getDate()} de ${MONTHS[o.getMonth()]}</span>` : `${cap(DOW[o.getDay()])} <span>${o.getDate()} de ${MONTHS[o.getMonth()]}</span>`;
+      html += `<section class="ls-card${d === T ? ' today' : ''}" id="ls-${d}">
+        <div class="ls-h"><h3>${head}</h3><button class="btn icon ghost sm" data-act="capture" data-date="${d}" data-type="event" aria-label="Agendar neste dia">${icon('plus', 18)}</button></div>
+        ${timed.map(i => `<button class="ls-item${i.t.type === 'event' ? ' event' : ''}${i.done ? ' done' : ''}" data-act="edit" data-key="${i.key}"><span class="ls-t">${i.time}</span><span class="ls-b"><b>${i.t.type === 'reminder' ? '🔔 ' : i.t.type === 'event' ? '' : '☑ '}${esc(i.t.title)}</b>${i.dur ? `<small>até ${fromMin(toMin(i.time) + i.dur)}</small>` : ''}</span></button>`).join('')}
+        ${loose.length ? `<div class="ls-loose">${loose.slice(0, 3).map(i => `<button data-act="edit" data-key="${i.key}">☑ ${esc(i.t.title)}</button>`).join('')}${loose.length > 3 ? `<span>+${loose.length - 3}</span>` : ''}</div>` : ''}
+      </section>`;
+    }
+    flush();
+    return `<div class="ls-strip" role="list">${strip}</div><div class="ls-list">${html}</div>
+      <button class="btn ls-more" data-act="list-more">Mostrar mais dias</button>`;
+  },
   timeGrid(days) {
     const u = Store.state.user, all = days.map(d => Tasks.on(d)), T = todayStr();
     const timed = all.flat().filter(i => i.time);
@@ -2066,7 +2191,7 @@ const Ai = {
     const last = this.last[where];
     return `<div class="ai-bar" data-where="${where}">
       <div class="ai-in"><span class="ai-spark">${icon('spark', 18)}</span>
-        <input class="ai-text" id="ai-${where}" placeholder="Diga o que agendar… ex.: consulta dia 13 às 14h" aria-label="Pedir para a IA agendar" autocomplete="off" enterkeyhint="send">
+        <input class="ai-text" id="ai-${where}" placeholder="Ex.: consulta dia 13 às 14h" aria-label="Pedir para a IA agendar" autocomplete="off" enterkeyhint="send">
         <button class="ai-mic${this.listening === where ? ' on' : ''}" data-act="ai-mic" data-w="${where}" aria-label="Falar" title="${Speech.supported() ? 'Falar' : 'Voz não disponível neste navegador'}">${icon('mic', 18)}</button>
         <button class="ai-send" data-act="ai-send" data-w="${where}" aria-label="Enviar">${icon('right', 18)}</button></div>
       ${noOut ? '' : `<div class="ai-out" id="ai-out-${where}" aria-live="polite">${last ? this.resultHtml(last) : ''}</div>`}
@@ -2101,7 +2226,7 @@ const Ai = {
     catch (e) { result = { reply: e.message === 'auth' ? 'Sua sessão expirou. Entre de novo na conta.' : 'Não consegui falar com a IA agora. Tente de novo em instantes.', ops: [], error: true }; }
     this.busy = false;
     if (where === 'page') { this.history.push({ role: 'assistant', content: result.reply, result }); this.history = this.history.slice(-20); App.render(); this.scroll(); }
-    else { this.last[where] = result; App.render(); }
+    else { this.last[where] = result; App.render(); if (where === 'plus') this.setOut('plus', this.resultHtml(result)); }
   },
   setOut(where, html) { const el = $('#ai-out-' + where); if (el) el.innerHTML = html; },
   scroll() { setTimeout(() => { const c = $('#ai-chat'); if (c) c.scrollTop = c.scrollHeight; const b = $('.ai-compose'); b && b.scrollIntoView({ block: 'end' }); }, 30); },
@@ -2253,7 +2378,7 @@ const Ai = {
     if (inp) inp.placeholder = 'Ouvindo… fale agora';
     Speech.start((txt, fin) => { const el = $('#ai-' + where); if (el) el.value = txt; if (fin) finalText = txt; }, err => {
       this.listening = false; this.markMic(where, false);
-      const el = $('#ai-' + where); if (el) el.placeholder = 'Diga o que agendar… ex.: consulta dia 13 às 14h';
+      const el = $('#ai-' + where); if (el) el.placeholder = 'Ex.: consulta dia 13 às 14h';
       if (err === 'not-allowed' || err === 'service-not-allowed') UI.snack('Libere o microfone nas permissões do navegador.');
       const txt = finalText || (el && el.value) || '';
       if (txt.trim()) this.send(where, txt);
@@ -2507,7 +2632,7 @@ const App = {
   init() {
     Store.load(); this.applyTheme();
     const h = location.hash.slice(1); if (NAV.some(n => n[0] === h)) this.route = h;
-    if (this.isMobile()) this.params.agenda.view = 'month';
+    if (this.isMobile()) this.params.agenda.view = 'list';
     this.renderShell(); this.render(true); this.bind();
     if (!Store.state.user.onboarded) Onboarding.show();
     Notify.start(); Sync.init(); Pwa.init(); Push.start();
@@ -2529,13 +2654,13 @@ const App = {
     $('#sidebar').innerHTML = `<div class="brand"><i class="brand-mark"></i><span>NOVA</span></div>
       ${NAV.map(([k, l, ic], idx) => `${idx === 5 || idx === 9 ? '<div class="nav-sep"></div>' : ''}<button class="nav-btn" data-act="go" data-r="${k}" title="${l}">${icon(ic)}<span class="lbl">${l}</span><span class="count" data-count="${k}"></span></button>`).join('')}
       <button class="nav-btn" id="side-install" data-act="pwa-install" title="Instalar app" ${Pwa.offer() ? '' : 'hidden'}>${icon('plus')}<span class="lbl">Instalar app</span></button>
-      <button class="side-capture" data-act="capture" title="Nova tarefa (N)">${icon('plus')}<span class="lbl">Nova tarefa</span></button>
+      <button class="side-capture" data-act="plus" title="Novo (N)">${icon('plus')}<span class="lbl">Novo</span></button>
       <div class="sync" id="sync"><i></i><span>Salvo neste dispositivo</span></div>`;
     $('#topbar').innerHTML = `<div class="brand"><i class="brand-mark"></i><span>NOVA</span></div>
       <button class="btn ghost icon" data-act="search" aria-label="Buscar">${icon('search')}</button>
       <button class="btn ghost icon" data-act="drawer" aria-label="Menu">${icon('menu')}</button>`;
     $('#bottomnav').innerHTML = `${[['today', 'Hoje'], ['agenda', 'Agenda']].map(([k, l]) => `<button class="bn" data-act="go" data-r="${k}">${icon(k, 22)}${l}</button>`).join('')}
-      <button class="bn-plus" data-act="capture" aria-label="Nova tarefa">${icon('plus', 26)}</button>
+      <button class="bn-plus" data-act="plus" aria-label="Novo">${icon('plus', 26)}</button>
       ${[['tasks', 'Tarefas'], ['planner', 'Planner']].map(([k, l]) => `<button class="bn" data-act="go" data-r="${k}">${icon(k, 22)}${l}</button>`).join('')}`;
     this.renderSync();
   },
@@ -2577,7 +2702,7 @@ const App = {
       if (e.key === 'Escape') { if ($('.focus')) return Focus.close(); if (UI.isOpen()) return UI.close(); }
       const typing = document.activeElement && document.activeElement.matches('input,textarea,select,[contenteditable]');
       if (typing || UI.isOpen() || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === 'n' || e.key === 'N') { e.preventDefault(); Modals.capture({}); }
+      if (e.key === 'n' || e.key === 'N') { e.preventDefault(); Modals.plus(); }
       if (e.key === '/') { e.preventDefault(); Modals.search(); }
     });
     // arrastar e soltar (desktop)
@@ -2614,6 +2739,16 @@ const Actions = {
   go: d => App.go(d.r),
   'close-modal': () => UI.close(),
   capture: d => Modals.capture({ date: d.date, time: d.time, project: d.project, type: d.type }),
+  plus: () => Modals.plus(),
+  'plus-pick': d => {
+    UI.close();
+    const k = d.k;
+    if (k === 'note') return Modals.note();
+    if (k === 'event') return Modals.capture({ type: 'event' });
+    if (k === 'reminder') return Modals.capture({ type: 'reminder' });
+    if (k === 'dontforget') return Modals.capture({ mustNotForget: true });
+    return Modals.capture({});
+  },
   'pwa-install': () => Pwa.install(),
   'push-on': () => Push.enable(),
   'push-off': () => Push.disable(),
@@ -2624,6 +2759,8 @@ const Actions = {
   'ai-example': d => Ai.send('page', d.text),
   'ai-undo': d => Ai.undo(d.id),
   'ai-del': d => Ai.del(d.id, d.key),
+  'list-jump': d => { const el = document.getElementById('ls-' + d.date); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); else { App.params.agenda.date = d.date; App.render(); } },
+  'list-more': () => { App.params.agenda.listDays = (App.params.agenda.listDays || 30) + 30; App.render(); },
   'agenda-tasks': (d, el) => { App.params.agenda.showTasks = el.checked; App.render(); },
   search: () => Modals.search(),
   drawer: () => UI.sheet('Menu', NAV.map(([k, l, ic]) => ({ act: 'go', label: l, icon: ic, data: { r: k } }))),
@@ -2679,7 +2816,7 @@ const Actions = {
     const p = App.params.agenda, n = +d.n;
     if (!n) p.date = todayStr();
     else if (p.view === 'month') { const x = parseYmd(p.date); x.setDate(1); x.setMonth(x.getMonth() + n); p.date = ymd(x); }
-    else p.date = addDays(p.date, n * (p.view === 'week' ? 7 : 1));
+    else p.date = addDays(p.date, n * (p.view === 'week' ? 7 : p.view === 'list' ? 14 : 1));
     App.render();
   },
   'agenda-day': d => { App.params.agenda.view = 'day'; App.params.agenda.date = d.date; App.render(); },
@@ -2732,12 +2869,35 @@ const Actions = {
 
 /* ---------- modais ---------- */
 const Modals = {
+  /* Menu do +: a IA primeiro, depois as opções */
+  plus() {
+    const opts = [
+      ['event', '📅', 'Agendar', 'Consulta, reunião, visita'],
+      ['task', '☑️', 'Tarefa', 'Algo para fazer'],
+      ['reminder', '🔔', 'Lembrete', 'Me avise numa hora'],
+      ['note', '📝', 'Anotar', 'Ideia ou recado'],
+      ['dontforget', '🧠', 'Não esquecer', 'Contas, prazos e renovações', 'wide'],
+    ];
+    UI.open(`<button class="btn ghost icon x" data-act="close-modal" aria-label="Fechar">${icon('x')}</button>
+      <h2 tabindex="-1" autofocus>O que você quer fazer?</h2>
+      ${Ai.bar('plus')}
+      <p class="plus-tip">Fale ou escreva do seu jeito, ex.: “consulta dia 13 às 14h”. A IA agenda sozinha.</p>
+      <div class="plus-sep">Ou escolha</div>
+      <div class="plus-grid">${opts.map(([k, e, t, d, w]) => `<button class="plus-opt${w ? ' ' + w : ''}" data-act="plus-pick" data-k="${k}"><span class="pe">${e}</span><span><b>${t}</b><br><small>${d}</small></span></button>`).join('')}</div>`, { cls: 'plus', label: 'O que você quer fazer?' });
+  },
+  note() {
+    UI.open(`<button class="btn ghost icon x" data-act="close-modal" aria-label="Fechar">${icon('x')}</button>
+      <h2>Anotar</h2><p class="sub">Uma ideia, um recado. Depois você pode transformar em tarefa.</p>
+      <textarea class="input" id="nt-text" rows="4" autofocus placeholder="Escreva aqui…"></textarea>
+      <div class="dialog-foot"><button class="btn" data-act="close-modal">Cancelar</button><button class="btn primary" id="nt-save">Guardar nota</button></div>`, { label: 'Anotar' });
+    $('#nt-save').onclick = () => { const v = $('#nt-text').value.trim(); if (!v) return $('#nt-text').focus(); Store.commit(s => s.notes.unshift({ id: uid(), text: v, createdAt: Date.now() })); UI.close(); UI.snack('Nota guardada.'); };
+  },
   /* captura rápida em linguagem natural */
   capture(o = {}) {
     const ex = ['Me lembra amanhã às 15h de enviar o orçamento', 'Criar post da Dra. na sexta às 9h, leva 1 hora', 'Pagar conta todo dia 10', 'Reunião com cliente segunda às 10h'];
     UI.open(`<button class="btn ghost icon x" data-act="close-modal" aria-label="Fechar">${icon('x')}</button>
-      <h2>${o.type === 'event' ? 'Novo compromisso' + (o.date ? ' · ' + fmtShort(o.date) : '') : 'Nova tarefa'}</h2><p class="sub">Escreva do seu jeito. O NOVA entende data, hora, duração e repetição.</p>
-      <div class="qc-wrap"><textarea id="qc" class="qc-input" rows="2" placeholder="O que você precisa lembrar?" autofocus aria-label="Descreva a tarefa">${esc(o.text || '')}</textarea>
+      <h2>${(o.type === 'event' ? 'Novo compromisso' : o.type === 'reminder' ? 'Novo lembrete' : o.mustNotForget ? 'Não esquecer' : 'Nova tarefa') + (o.date ? ' · ' + fmtShort(o.date) : '')}</h2><p class="sub">Escreva do seu jeito. O NOVA entende data, hora, duração e repetição.</p>
+      <div class="qc-wrap"><textarea id="qc" class="qc-input" rows="2" placeholder="${o.type === 'event' ? 'Ex.: Consulta dia 13 às 14h' : o.type === 'reminder' ? 'Ex.: Tomar remédio às 20h' : o.mustNotForget ? 'Ex.: Renovar o domínio dia 20' : 'O que você precisa fazer?'}" autofocus aria-label="Descreva a tarefa">${esc(o.text || '')}</textarea>
         <button class="mic" id="qc-mic" type="button" aria-label="Falar" title="${Speech.supported() ? 'Falar' : 'Voz não disponível neste navegador'}">${icon('mic')}</button></div>
       <div class="parsed" id="qc-parsed" aria-live="polite"></div>
       <p class="qc-examples" id="qc-ex">Exemplos: ${ex.map(x => `<button type="button" data-ex="${esc(x)}">${esc(x)}</button>`).join(' · ')}</p>
@@ -2745,8 +2905,11 @@ const Modals = {
     const ta = $('#qc'), out = $('#qc-parsed');
     const build = () => {
       const p = Parser.parse(ta.value), s = Store.state;
-      const t = mkTask({ title: p.title || ta.value.trim(), date: p.date ?? o.date ?? (o.time ? todayStr() : null), time: p.time ?? o.time ?? null, duration: p.duration || ((p.type || o.type) === 'event' ? 60 : 30), priority: p.priority || 3, type: p.type || o.type || 'task', recurrence: p.recurrence, mustNotForget: p.mustNotForget, projectId: o.project || null });
+      const t = mkTask({ title: p.title || ta.value.trim(), date: p.date ?? o.date ?? (o.time ? todayStr() : null), time: p.time ?? o.time ?? null, duration: p.duration || ((p.type || o.type) === 'event' ? 60 : 30), priority: p.priority || 3, type: p.type || o.type || 'task', recurrence: p.recurrence, mustNotForget: p.mustNotForget || !!o.mustNotForget, projectId: o.project || null });
       t.reminder = p.reminder ?? (t.time ? s.settings.notif.defaultReminder : (p.intent && t.date ? 0 : null));
+      if (t.type === 'reminder') { if (!t.time && t.date) t.time = '09:00'; if (p.reminder == null) t.reminder = t.time ? 0 : null; }
+      if (t.mustNotForget && t.priority > 2 && !p.priority) t.priority = 2;
+      if (t.mustNotForget && t.date && !t.time) { t.time = '09:00'; t.duration = 15; if (p.reminder == null) t.reminder = 1440; }
       if (p.intent && !t.time && t.date) { t.time = '09:00'; t.reminder = p.reminder ?? 0; }
       if (t.priority === 1 && t.reminder != null && p.intent) t.persistent = true;
       return { t, p };
