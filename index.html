@@ -325,6 +325,10 @@ details.block[open] summary{margin-bottom:10px}
 .ai-item small{display:block;color:var(--ink-2);font-size:12.5px;margin-top:1px}
 .ai-item .ai-warn{color:var(--full);font-weight:600}
 .ai-ico{font-size:18px;width:24px;text-align:center}
+.ai-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ai-chip{border:1px solid var(--accent);background:var(--accent-soft);color:var(--ink);border-radius:999px;padding:8px 14px;font-size:14px;font-weight:600;text-align:left;cursor:pointer;line-height:1.3}
+.ai-chip.warn{border-color:var(--full);background:color-mix(in srgb,var(--full) 12%,transparent)}
+.ai-chip:hover{background:var(--accent);color:var(--accent-ink)}
 .ai-foot{display:flex;justify-content:flex-end;margin-top:6px}
 .ai-dots{display:inline-flex;gap:4px;vertical-align:middle;margin-right:6px}
 .ai-dots i{width:6px;height:6px;border-radius:50%;background:var(--ink-3);animation:aidot 1s infinite}
@@ -2219,31 +2223,41 @@ const Ai = {
     if (!text || this.busy) return;
     if (inp) inp.value = '';
     this.busy = true;
-    if (where === 'page') { this.history.push({ role: 'user', content: text }); App.render(); this.scroll(); }
-    else this.setOut(where, '<div class="ai-card"><span class="ai-dots"><i></i><i></i><i></i></span> Entendendo…</div>');
+    const prior = this.recent();                       // conversa recente (todas as barras compartilham)
+    this.history.push({ role: 'user', content: text, at: Date.now() });
+    if (where === 'page') { App.render(); this.scroll(); }
+    else this.setOut(where, '<div class="ai-card"><span class="ai-dots"><i></i><i></i><i></i></span> Pensando…</div>');
     let result;
-    try { result = await this.ask(text); }
+    try { result = await this.ask(text, prior); }
     catch (e) { result = { reply: e.message === 'auth' ? 'Sua sessão expirou. Entre de novo na conta.' : 'Não consegui falar com a IA agora. Tente de novo em instantes.', ops: [], error: true }; }
     this.busy = false;
-    if (where === 'page') { this.history.push({ role: 'assistant', content: result.reply, result }); this.history = this.history.slice(-20); App.render(); this.scroll(); }
+    result.where = where;
+    this.history.push({ role: 'assistant', content: result.reply + this.opsNote(result), result, at: Date.now() }); this.history = this.history.slice(-30);
+    if (where === 'page') { App.render(); this.scroll(); }
     else { this.last[where] = result; App.render(); if (where === 'plus') this.setOut('plus', this.resultHtml(result)); }
+  },
+  recent() { const lim = Date.now() - 30 * 60000; return this.history.filter(m => (m.at || 0) > lim).slice(-10).map(m => ({ role: m.role, content: m.content })); },
+  // registra na conversa o que foi feito, para a IA entender "marca mesmo assim", "muda para as 15h"…
+  opsNote(r) {
+    const done = (r.ops || []).filter(o => o.kind !== 'delete' || o.done).map(o => `${o.kind === 'create' ? 'criado' : o.kind === 'update' ? 'remarcado' : o.kind === 'complete' ? 'concluído' : 'excluído'}: ${o.t.title} ${o.date || o.t.date || ''} ${o.time || o.t.time || ''}`.trim());
+    return done.length ? ` [feito: ${done.join('; ')}]` : '';
   },
   setOut(where, html) { const el = $('#ai-out-' + where); if (el) el.innerHTML = html; },
   scroll() { setTimeout(() => { const c = $('#ai-chat'); if (c) c.scrollTop = c.scrollHeight; const b = $('.ai-compose'); b && b.scrollIntoView({ block: 'end' }); }, 30); },
 
-  async ask(text) {
+  async ask(text, prior) {
     const url = this.endpoint();
     if (url && this.online !== false) {
       try {
         const headers = { 'Content-Type': 'application/json' };
         if (typeof Cloud !== 'undefined' && Cloud.sb) { const { data } = await Cloud.sb.auth.getSession(); const tk = data && data.session && data.session.access_token; if (tk) headers.Authorization = 'Bearer ' + tk; }
-        const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ text, context: this.context(), history: this.history.slice(-8).map(m => ({ role: m.role, content: m.content })) }) });
+        const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ text, context: this.context(), history: prior || [] }) });
         if (r.status === 404) { this.online = false; return this.local(text); }
         if (r.status === 401) throw new Error('auth');
         const data = await r.json().catch(() => null);
         if (!r.ok || !data) { if (data && data.error === 'sem_chave') { this.online = false; return this.local(text); } throw new Error('server'); }
         this.online = true;
-        return this.apply(data);
+        return this.apply(data, { text });
       } catch (e) {
         if (e.message === 'auth') throw e;
         if (this.online === null) { this.online = false; return this.local(text); }
@@ -2258,14 +2272,22 @@ const Ai = {
     const s = Store.state, T = todayStr(), items = [];
     for (let k = -7; k <= 75 && items.length < 220; k++) {
       const d = addDays(T, k);
-      Tasks.on(d).forEach(i => { if (!(k < 0 && i.done)) items.push({ ref: i.key, date: d, time: i.time || null, min: i.dur || null, type: i.t.type, title: i.t.title, done: i.done || undefined, repeats: i.rec || undefined }); });
+      Tasks.on(d).forEach(i => { if (!(k < 0 && i.done)) items.push({ ref: i.key, date: d, time: i.time || null, end: i.time && i.dur ? fromMin(Math.min(1439, toMin(i.time) + i.dur)) : null, min: i.dur || null, type: i.t.type, title: i.t.title, done: i.done || undefined, repeats: i.rec || undefined }); });
+    }
+    // horários livres de cada dia (06:00–23:00), contando só o que tem horário marcado
+    const days = [];
+    for (let k = 0; k < 35; k++) {
+      const d = addDays(T, k), busy = Tasks.on(d).filter(i => i.time && !i.done && i.t.type !== 'reminder').map(i => ({ start: toMin(i.time), end: toMin(i.time) + Math.max(i.dur, 15) }));
+      let from = 360; if (k === 0) from = Math.max(from, Math.ceil(nowMin() / 15) * 15);
+      const free = from < 1380 ? Sched.gaps({ start: from, end: 1380 }, busy).filter(g => g.end - g.start >= 15).map(g => fromMin(g.start) + '-' + fromMin(Math.min(g.end, 1380))) : [];
+      days.push({ date: d, dow: DOW[parseYmd(d).getDay()], free });
     }
     Tasks.undated().slice(0, 30).forEach(i => items.push({ ref: i.key, date: null, time: null, type: i.t.type, title: i.t.title }));
     const now = new Date();
     return {
       today: T, weekday: DOW[now.getDay()], now: fromMin(nowMin()), timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       dayStart: s.user.dayStart, dayEnd: s.user.dayEnd, lunch: s.settings.lunch.on ? s.settings.lunch.start + '-' + s.settings.lunch.end : null,
-      defaultReminder: s.settings.notif.defaultReminder, projects: s.projects.map(p => p.name), items,
+      defaultReminder: s.settings.notif.defaultReminder, projects: s.projects.map(p => p.name), items, days,
     };
   },
 
@@ -2278,12 +2300,15 @@ const Ai = {
     if (!p.date && !p.time && !p.recurrence) {
       return { reply: 'Não encontrei data ou horário nessa frase. Tente algo como “consulta dia 13 às 14h”.', ops: [] };
     }
-    return this.apply({ reply: '', actions: [{ op: 'create', type: isEvent ? 'event' : (p.intent ? 'task' : (p.type || 'task')), title, date: p.date || (p.time ? todayStr() : null), time: p.time || null, duration: p.duration || null, reminder: p.reminder ?? null, priority: p.priority || null, repeat_rule: p.recurrence || null }] });
+    return this.apply({ reply: '', actions: [{ op: 'create', type: isEvent ? 'event' : (p.intent ? 'task' : (p.type || 'task')), title, date: p.date || (p.time ? todayStr() : null), time: p.time || null, duration: p.duration || null, reminder: p.reminder ?? null, priority: p.priority || null, repeat_rule: p.recurrence || null }] }, { text });
   },
 
   /* Aplica o que a IA decidiu, de uma vez só (com Desfazer) */
-  apply(data) {
-    const s = Store.state, before = JSON.stringify(s), ops = [], T = todayStr();
+  apply(data, opts = {}) {
+    const s = Store.state, before = JSON.stringify(s), ops = [], T = todayStr(), conflicts = [];
+    const lastBot = [...this.history].reverse().find(m => m.role === 'assistant' && (m.at || 0) > Date.now() - 30 * 60000);
+    const askedBefore = !!(lastBot && /\?/.test(lastBot.content));
+    const confirmed = opts.force || (askedBefore && /mesmo assim|pode marcar|pode agendar|confirm|^\s*(sim|isso|ok|pode|beleza|claro)\b/i.test(opts.text || ''));
     const proj = name => { if (!name) return null; const p = s.projects.find(x => x.name.toLowerCase() === String(name).toLowerCase()); return p ? p.id : null; };
     const okDate = d => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
     const okTime = t => { if (typeof t !== 'string') return null; const m = t.match(/^(\d{1,2}):(\d{2})/); return m && +m[1] < 24 && +m[2] < 60 ? pad(+m[1]) + ':' + m[2] : null; };
@@ -2302,7 +2327,8 @@ const Ai = {
           });
           t.reminder = a.reminder != null && a.reminder >= 0 ? Math.round(a.reminder) : (time ? s.settings.notif.defaultReminder : null);
           if (recurrence && !date) t.date = Parser.firstOccurrence ? Parser.firstOccurrence(recurrence, T, new Date()) || T : T;
-          const clash = t.date && t.time ? Tasks.on(t.date).filter(i => i.time && i.t.type !== 'reminder' && !i.done && toMin(i.time) < toMin(t.time) + t.duration && toMin(t.time) < toMin(i.time) + i.dur) : [];
+          const clash = t.date && t.time && t.type !== 'reminder' ? Tasks.on(t.date).filter(i => i.time && i.t.type !== 'reminder' && !i.done && toMin(i.time) < toMin(t.time) + t.duration && toMin(t.time) < toMin(i.time) + Math.max(i.dur, 15)) : [];
+          if (clash.length && !confirmed) { conflicts.push({ a, t, clash }); continue; }   // bate com outro: pergunta antes
           s.tasks.push(t);
           ops.push({ kind: 'create', key: t.id + '@' + (t.recurrence ? t.date : (t.date || 'none')), t, clash: clash.map(i => i.time + ' ' + i.t.title) });
         } else if (a.op === 'update' && a.ref) {
@@ -2324,15 +2350,54 @@ const Ai = {
         }
       } catch (e) { console.warn('[NOVA] ação ignorada', a, e); }
     }
+    let choices = null, conflictMsg = '';
+    if (conflicts.length) {
+      const c = conflicts[0], t = c.t, end = fromMin(toMin(t.time) + t.duration);
+      const list = c.clash.map(i => `${i.t.title} (${i.time}–${fromMin(toMin(i.time) + i.dur)})`).join(' e ');
+      conflictMsg = `Cuidado! “${t.title}” das ${t.time} às ${end} bate com ${list}. Não vai dar para fazer os dois. Quer marcar mesmo assim ou em outro horário?`;
+      choices = [{ label: 'Marcar mesmo assim', patch: null }, ...this.alts(t.date, t.duration, t.time).map(x => ({ label: x.label, patch: { date: x.date, time: x.time } }))];
+      this.pending = { actions: conflicts.map(x => x.a), choices };
+    }
     const changed = ops.some(o => o.kind !== 'delete');
     if (changed) Store.save();
-    const result = { reply: String(data.reply || '').slice(0, 2000), ops, undo: changed ? before : null, id: uid(), after: Store.state.updatedAt };
+    const result = { reply: conflictMsg ? (ops.length ? this.summary(ops) + ' ' : '') + conflictMsg : String(data.reply || '').slice(0, 2000), ops, choices, suggestions: (Array.isArray(data.suggestions) ? data.suggestions : []).filter(x => typeof x === 'string' && x.trim()).slice(0, 3).map(x => x.slice(0, 120)), undo: changed ? before : null, id: uid(), after: Store.state.updatedAt };
     if (changed) this.lastUndo = result.id;
     if (!result.reply) result.reply = this.summary(ops);
     this.results[result.id] = result;
     return result;
   },
   results: {},
+
+  // horários alternativos livres para a mesma duração (mesmo dia e próximos)
+  alts(date, dur, around) {
+    const out = [], u = Store.state.user, T = todayStr();
+    for (let k = 0; k < 6 && out.length < 2; k++) {
+      const d = addDays(date, k); if (d < T) continue;
+      const busy = Tasks.on(d).filter(i => i.time && !i.done && i.t.type !== 'reminder').map(i => ({ start: toMin(i.time) - 30, end: toMin(i.time) + Math.max(i.dur, 15) + 30 }));
+      let from = toMin(u.dayStart); if (d === T) from = Math.max(from, Math.ceil((nowMin() + 30) / 15) * 15);
+      const to = Math.max(toMin(u.dayEnd), 1260);
+      const gaps = Sched.gaps({ start: from, end: to }, busy).filter(g => g.end - g.start >= dur);
+      const pref = k === 0 ? gaps.filter(g => g.start >= toMin(around)).concat(gaps.filter(g => g.start < toMin(around))) : gaps;
+      const g = pref[0]; if (!g) continue;
+      const st = Math.ceil(g.start / 15) * 15; if (st + dur > g.end) continue;
+      const time = fromMin(st), o = parseYmd(d);
+      out.push({ date: d, time, label: k === 0 ? `Marcar às ${time}` : `Marcar ${d === addDays(T, 1) ? 'amanhã' : DOW_S[o.getDay()].toLowerCase() + ' ' + o.getDate() + '/' + pad(o.getMonth() + 1)} às ${time}` });
+    }
+    return out;
+  },
+  pick(id, idx) {
+    const r = this.results[id], p = this.pending; if (!r || !p || !r.choices) return;
+    const ch = r.choices[+idx]; if (!ch) return;
+    const actions = p.actions.map(a => Object.assign({}, a, ch.patch || {}));
+    this.pending = null; r.choices = null;
+    const res = this.apply({ reply: '', actions }, { force: true });
+    res.reply = ch.patch ? `Pronto! Marquei em outro horário, sem conflito.` : 'Combinado, marquei mesmo assim. Vou te lembrar dos dois.';
+    res.where = r.where;
+    this.history.push({ role: 'user', content: ch.label, at: Date.now() });
+    this.history.push({ role: 'assistant', content: res.reply + this.opsNote(res), result: res, at: Date.now() });
+    if (r.where && r.where !== 'page') this.last[r.where] = res;
+    App.render(); if (r.where === 'plus') this.setOut('plus', this.resultHtml(res)); if (r.where === 'page') this.scroll();
+  },
 
   summary(ops) {
     const c = ops.filter(o => o.kind === 'create');
@@ -2354,7 +2419,7 @@ const Ai = {
       if (o.kind === 'delete') return `<div class="ai-item del"><span class="ai-ico">🗑</span><div><b>Excluir “${esc(t.title)}”?</b><small>${esc(this.when(t, o.date, o.time))}${o.rec ? ' · só esta vez' : ''}</small></div>${o.done ? '<small class="muted">Excluído</small>' : `<button class="btn sm danger" data-act="ai-del" data-id="${r.id}" data-key="${o.key}">Excluir</button>`}</div>`;
       return '';
     }).join('');
-    return `<div class="ai-card${r.error ? ' err' : ''}"><p>${esc(r.reply)}</p>${cards ? `<div class="ai-items">${cards}</div>` : ''}${this.canUndo(r) ? `<div class="ai-foot"><button class="btn sm ghost" data-act="ai-undo" data-id="${r.id}">Desfazer</button></div>` : ''}${r.undone ? '<div class="ai-foot muted" style="font-size:13px">Desfeito.</div>' : ''}</div>`;
+    return `<div class="ai-card${r.error ? ' err' : ''}"><p>${esc(r.reply)}</p>${cards ? `<div class="ai-items">${cards}</div>` : ''}${r.choices ? `<div class="ai-chips">${r.choices.map((c, k) => `<button class="ai-chip${k ? '' : ' warn'}" data-act="ai-pick" data-id="${r.id}" data-i="${k}">${esc(c.label)}</button>`).join('')}</div>` : ''}${(r.suggestions || []).length ? `<div class="ai-chips">${r.suggestions.map(x => `<button class="ai-chip" data-act="ai-chip" data-w="${r.where || 'page'}" data-text="${esc(x)}">${esc(x)}</button>`).join('')}</div>` : ''}${this.canUndo(r) ? `<div class="ai-foot"><button class="btn sm ghost" data-act="ai-undo" data-id="${r.id}">Desfazer</button></div>` : ''}${r.undone ? '<div class="ai-foot muted" style="font-size:13px">Desfeito.</div>' : ''}</div>`;
   },
 
   canUndo(r) { return !!(r.undo && !r.undone && r.id === this.lastUndo && Store.state.updatedAt === r.after); },
@@ -2755,6 +2820,8 @@ const Actions = {
   'push-test': () => Push.test(),
   'push-hint-no': () => Store.commit(s => { s.dismissed = s.dismissed || {}; s.dismissed['push-hint'] = Date.now(); }),
   'ai-send': d => Ai.send(d.w),
+  'ai-pick': d => Ai.pick(d.id, d.i),
+  'ai-chip': d => Ai.send(d.w || 'page', d.text),
   'ai-mic': d => Ai.mic(d.w),
   'ai-example': d => Ai.send('page', d.text),
   'ai-undo': d => Ai.undo(d.id),
