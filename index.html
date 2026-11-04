@@ -224,19 +224,103 @@ details.block[open] summary{margin-bottom:10px}
 /* ============ AGENDA ============ */
 .toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
 .toolbar .title{font:700 24px/1.1 var(--f-display);letter-spacing:-.015em;margin-right:auto;text-transform:capitalize}
-.month{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1px solid var(--line);border-left:1px solid var(--line);background:var(--surface);border-radius:var(--r-md);overflow:hidden}
-.month .dow{padding:8px 10px;font-size:12px;color:var(--ink-3);border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--surface-2)}
-.mcell{min-height:112px;padding:6px 6px 8px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);text-align:left;background:var(--surface);border-top:0;border-left:0;display:flex;flex-direction:column;gap:3px;min-width:0}
-.mcell:hover{background:var(--surface-2)}
-.mcell.out{background:var(--surface-2)}
-.mcell.out .dnum{color:var(--ink-3)}
-.dnum{font-size:13px;font-weight:600;width:26px;height:26px;display:grid;place-items:center;border-radius:50%;font-variant-numeric:tabular-nums}
+.ag-sum{display:flex;align-items:center;gap:8px 22px;flex-wrap:wrap;font-size:14px;color:var(--ink-2);margin:-4px 0 14px}
+.ag-sum b{color:var(--ink);font-weight:700}
+.ag-sum .spacer{flex:1}
+.chk{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:13px}
+.chk input{accent-color:var(--accent);width:16px;height:16px}
+.ag-split{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;align-items:start}
+.month{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.month .dow{padding:2px 6px 4px;font-size:12px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em}
+.mcell{min-height:118px;padding:8px 7px 8px;text-align:left;background:var(--surface);border:1px solid var(--line-2);border-radius:12px;display:flex;flex-direction:column;gap:4px;min-width:0;color:var(--ink);transition:border-color .15s,box-shadow .15s;cursor:pointer;position:relative}
+.mcell:hover{border-color:var(--ink-3)}
+.mcell.st-free:not(.past):not(.out){background:color-mix(in srgb,var(--ok) 7%,var(--surface));border-color:color-mix(in srgb,var(--ok) 22%,transparent)}
+.mcell.st-full:not(.past):not(.out){box-shadow:inset 0 -3px 0 var(--full)}
+.mcell.wkend:not(.st-free){background:var(--surface-2)}
+.mcell.out{opacity:.38}
+.mcell.past{opacity:.6}
+.mcell.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.mtop{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-bottom:2px}
+.dnum{font-size:14px;font-weight:700;min-width:28px;height:28px;display:grid;place-items:center;border-radius:50%;font-variant-numeric:tabular-nums}
 .mcell.today .dnum{background:var(--accent);color:var(--accent-ink)}
-.mev{font-size:12px;line-height:1.3;padding:2px 6px;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--accent-soft);color:var(--ink)}
+.mfree{font-size:11px;font-weight:700;color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent);padding:2px 8px;border-radius:999px;letter-spacing:.01em}
+.mfull{width:9px;height:9px;border-radius:50%;background:var(--full);margin-right:4px}
+.mev{font-size:12px;line-height:1.35;padding:3px 7px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--accent-soft);color:var(--ink);display:block}
+.mev em{font-style:normal;font-weight:700;font-variant-numeric:tabular-nums;opacity:.85}
 .mev.event{background:var(--event);color:var(--surface)}
 .mev.done{opacity:.45;text-decoration:line-through}
-.mmore{font-size:12px;color:var(--ink-3);padding-left:6px}
+.mmore{font-size:12px;color:var(--ink-2);padding-left:4px;font-weight:600}
+.mtasks{font-size:12px;color:var(--ink-3);padding-left:4px;margin-top:auto}
 .mdots{display:none}
+.lg-free{background:color-mix(in srgb,var(--ok) 25%,transparent);border:1px solid var(--ok)}
+/* cartão do dia */
+.agday{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:18px;position:sticky;top:18px}
+.agday.compact{position:static;margin-bottom:12px}
+.agday .dc-h{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.agday h2{margin:0;font:700 17px/1.25 var(--f-display);text-transform:capitalize}
+.agday .dc-h p{margin:4px 0 0;font-size:13px;color:var(--ink-2)}
+.agday.st-free .dc-h p{color:var(--ok);font-weight:600}
+.dc-list{display:flex;flex-direction:column;gap:6px}
+.dc-item,.dc-free,.dc-break{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;border-radius:10px;padding:9px 10px;border:1px solid var(--line-2);background:var(--surface-2);color:var(--ink);font-size:14px}
+.dc-t{width:44px;flex:none;font-weight:700;font-variant-numeric:tabular-nums;font-size:13px;padding-top:1px}
+.dc-b{flex:1;min-width:0}
+.dc-b b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.dc-b small{display:block;color:var(--ink-3);font-size:12px;margin-top:1px}
+.dc-item.event{background:var(--event);border-color:var(--event);color:var(--surface)}
+.dc-item.event small{color:inherit;opacity:.7}
+.dc-item.done b{text-decoration:line-through;opacity:.55}
+.dc-free{background:none;border:1.5px dashed color-mix(in srgb,var(--ok) 45%,transparent);color:var(--ok)}
+.dc-free b{font-weight:700}
+.dc-free small{color:var(--ink-3)}
+.dc-free .dc-add{opacity:0;transition:opacity .15s;align-self:center}
+.dc-free:hover{background:color-mix(in srgb,var(--ok) 7%,transparent)}
+.dc-free:hover .dc-add,.dc-free:focus-visible .dc-add{opacity:1}
+.dc-break{background:none;border:0;padding:4px 10px;color:var(--ink-3);font-size:13px}
+.dc-sub{font-size:12px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 6px}
+.dc-empty{margin:6px 0}
+.dc-more{margin-top:12px;width:100%;justify-content:center}
+.wk-list{display:flex;flex-direction:column}
+.tg-head button{padding:10px 8px;font-size:13px;color:var(--ink-2);border:0;border-left:1px solid var(--line-2);background:none;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px}
+.tg-head button.today{color:var(--accent);font-weight:600}
+.tg-head button:hover{background:var(--surface-2)}
+/* ============ ASSISTENTE (IA) ============ */
+.ai-bar{margin:0 0 18px}
+.ai-in{display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid var(--line);border-radius:16px;padding:6px 6px 6px 14px;box-shadow:var(--shadow);transition:border-color .15s}
+.ai-in:focus-within{border-color:var(--accent)}
+.ai-spark{color:var(--accent);display:flex}
+.ai-text{flex:1;min-width:0;border:0;outline:none;background:none;font:500 15px/1.4 var(--f-ui);color:var(--ink);padding:9px 4px}
+.ai-text::placeholder{color:var(--ink-3)}
+.ai-mic,.ai-send{width:40px;height:40px;border-radius:12px;border:0;display:grid;place-items:center;flex:none;cursor:pointer}
+.ai-mic{background:var(--surface-2);color:var(--ink-2)}
+.ai-mic.on{background:var(--over);color:#fff;animation:aipulse 1.2s ease-in-out infinite}
+.ai-send{background:var(--accent);color:var(--accent-ink)}
+@keyframes aipulse{50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--over) 22%,transparent)}}
+.ai-out:not(:empty){margin-top:10px}
+.ai-card{background:var(--surface);border-radius:14px;padding:12px 14px;box-shadow:var(--shadow);border-left:3px solid var(--accent);font-size:14px}
+.ai-card.err{border-left-color:var(--over)}
+.ai-card p{margin:0;white-space:pre-line}
+.ai-items{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.ai-item{display:flex;align-items:center;gap:10px;background:var(--surface-2);border-radius:10px;padding:8px 10px}
+.ai-item>div{flex:1;min-width:0}
+.ai-item b{display:block;font-weight:600}
+.ai-item small{display:block;color:var(--ink-2);font-size:12.5px;margin-top:1px}
+.ai-item .ai-warn{color:var(--full);font-weight:600}
+.ai-ico{font-size:18px;width:24px;text-align:center}
+.ai-foot{display:flex;justify-content:flex-end;margin-top:6px}
+.ai-dots{display:inline-flex;gap:4px;vertical-align:middle;margin-right:6px}
+.ai-dots i{width:6px;height:6px;border-radius:50%;background:var(--ink-3);animation:aidot 1s infinite}
+.ai-dots i:nth-child(2){animation-delay:.15s}.ai-dots i:nth-child(3){animation-delay:.3s}
+@keyframes aidot{50%{opacity:.25;transform:translateY(-2px)}}
+.ai-chat{display:flex;flex-direction:column;gap:12px;min-height:280px;padding:6px 0 16px}
+.ai-msg{max-width:86%}
+.ai-msg.me{align-self:flex-end;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:15px}
+.ai-msg.bot{align-self:flex-start;width:min(560px,100%)}
+.ai-hello{text-align:center;color:var(--ink-2);padding:30px 10px}
+.ai-hello>svg{color:var(--accent)}
+.ai-ex{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:8px}
+.ai-ex .chip{padding:8px 14px;font-size:14px;cursor:pointer}
+.ai-compose{position:sticky;bottom:12px;z-index:3}
+.ai-compose .ai-bar{margin:0}
 .tgrid{display:grid;background:var(--surface);border-radius:var(--r-md);box-shadow:var(--shadow);overflow:hidden}
 .tg-head{display:grid;border-bottom:1px solid var(--line)}
 .tg-head div{padding:10px 8px;font-size:13px;color:var(--ink-2);border-left:1px solid var(--line-2);text-align:center}
@@ -414,6 +498,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px}
 .onb .foot .btn{min-height:46px;padding:0 22px}
 
 /* ============ TABLET ============ */
+@media (max-width:1100px){ .ag-split{grid-template-columns:1fr} .agday{position:static} }
 @media (max-width:1199px){
   .app,body.wide .app{grid-template-columns:76px minmax(0,1fr)}
   .aside{display:none}
@@ -455,12 +540,20 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px}
   .pday{min-height:0}
   .pitems{min-height:20px}
   .month .dow{padding:6px 2px;text-align:center;font-size:11px}
-  .mcell{min-height:52px;align-items:center;padding:4px 2px}
-  .mev,.mmore{display:none}
-  .mdots{display:flex;gap:3px;justify-content:center}
+  .ag-split{grid-template-columns:1fr}
+  .ag-sum{font-size:13px;gap:4px 14px}
+  .month{gap:3px}
+  .month .dow{padding:2px 0 4px;text-align:center;font-size:10.5px}
+  .mcell{min-height:54px;align-items:center;padding:5px 2px;border-radius:9px;gap:3px}
+  .mtop{justify-content:center;margin:0}
+  .mcell .mfree,.mcell .mfull,.mev,.mmore,.mtasks{display:none}
+  .dnum{min-width:26px;height:26px;font-size:13px}
+  .mdots{display:flex;gap:3px;justify-content:center;min-height:5px}
   .mdots i{width:5px;height:5px;border-radius:50%;background:var(--accent)}
   .mdots i.event{background:var(--event)}
-  .mcell.sel{background:var(--accent-soft)}
+  .agday{position:static;padding:16px}
+  .ai-text{font-size:16px}
+  .ai-compose{bottom:calc(76px + env(safe-area-inset-bottom))}
   .modal{place-items:end center;padding:0}
   .dialog,.dialog.sm,.dialog.lg{width:100%;border-radius:22px 22px 0 0;max-height:92vh;padding:20px 18px calc(20px + env(safe-area-inset-bottom,0px));animation:up .22s ease-out}
   .dialog-foot .btn{flex:1;min-height:46px}
@@ -1266,6 +1359,7 @@ const Views = {
           <button class="btn primary" data-act="organize" data-date="${T}">${icon('spark', 18)}Organizar meu dia</button>
         </div>
       </header>
+      ${Ai.bar('today')}
       <div class="daycard">
         <p class="day-sentence">${sentence}</p>
         <div class="daystrip" aria-hidden="true">
@@ -1305,6 +1399,20 @@ const Views = {
   },
 
   /* ---------------- AGENDA ---------------- */
+  // Informações de um dia: compromissos, tarefas e janelas livres
+  dayInfo(day) {
+    const u = Store.state.user, items = Tasks.on(day);
+    const events = items.filter(i => i.t.type === 'event');
+    const tasks = items.filter(i => i.t.type !== 'event');
+    const timed = items.filter(i => i.time && i.t.type !== 'reminder' && !i.done);
+    let ws = toMin(u.dayStart), we = toMin(u.dayEnd); if (we <= ws) we = Math.min(1439, ws + 600);
+    const blocks = [...Sched.breaks(), ...timed.map(i => ({ start: toMin(i.time), end: toMin(i.time) + Math.max(i.dur, 15) }))];
+    const free = Sched.gaps({ start: ws, end: we }, blocks).filter(g => g.end - g.start >= 30);
+    const freeMin = free.reduce((a, g) => a + g.end - g.start, 0);
+    const st = Sched.stats(day);
+    const state = !events.length && !timed.length ? 'free' : (st.level === 'over' || freeMin < 60) ? 'full' : 'busy';
+    return { day, items, events, tasks, timed, free, freeMin, state, pend: tasks.filter(i => !i.done), ws, we };
+  },
   agenda() {
     const p = App.params.agenda, mobile = App.isMobile();
     const view = p.view, d = p.date;
@@ -1315,11 +1423,12 @@ const Views = {
     } else if (view === 'week') {
       const ws = weekStart(d), we = addDays(ws, 6), a = parseYmd(ws), b = parseYmd(we);
       title = a.getMonth() === b.getMonth() ? `${a.getDate()}–${b.getDate()} de ${MONTHS[a.getMonth()]}` : `${a.getDate()} ${MONTHS[a.getMonth()].slice(0, 3)} – ${b.getDate()} ${MONTHS[b.getMonth()].slice(0, 3)}`;
-      body = mobile ? weekDays(ws).map(x => this.dayList(x)).join('') : this.timeGrid(weekDays(ws));
+      body = mobile ? `<div class="wk-list">${weekDays(ws).map(x => this.dayCard(x, true)).join('')}</div>` : this.timeGrid(weekDays(ws));
     } else {
-      title = fmtLong(d); body = this.timeGrid([d]);
+      title = fmtLong(d); body = mobile ? this.dayCard(d) : `<div class="ag-split"><div>${this.timeGrid([d])}</div>${this.dayCard(d)}</div>`;
     }
     return `<section class="page wide">
+      ${Ai.bar('agenda')}
       <div class="toolbar">
         <h1 class="title">${esc(title)}</h1>
         <div class="seg" role="group" aria-label="Visualização">${[['month', 'Mês'], ['week', 'Semana'], ['day', 'Dia']].map(([k, l]) => `<button data-act="agenda-view" data-v="${k}" aria-pressed="${view === k}">${l}</button>`).join('')}</div>
@@ -1328,28 +1437,62 @@ const Views = {
         <button class="btn icon" data-act="agenda-nav" data-n="1" aria-label="Próximo">${icon('right')}</button>
       </div>
       ${body}
-      <div class="legend-row"><span class="legend"><i style="background:var(--event)"></i>📅 Compromisso</span><span class="legend"><i style="background:var(--accent-soft);border:1px solid var(--accent)"></i>☑ Tarefa</span><span class="legend">🔔 Lembrete</span></div>
     </section>`;
   },
   month(dd, mobile) {
-    const first = new Date(dd.getFullYear(), dd.getMonth(), 1), start = weekStart(ymd(first)), T = todayStr(), sel = App.params.agenda.date;
-    let cells = '';
+    const p = App.params.agenda, showTasks = p.showTasks !== false;
+    const first = new Date(dd.getFullYear(), dd.getMonth(), 1), start = weekStart(ymd(first)), T = todayStr();
+    let sel = p.date; if (parseYmd(sel).getMonth() !== dd.getMonth()) sel = (T.slice(0, 7) === ymd(first).slice(0, 7)) ? T : ymd(first);
+    let cells = '', freeDays = 0, nEvents = 0, nextFree = null;
     for (let k = 0; k < 42; k++) {
-      const day = addDays(start, k), dObj = parseYmd(day); if (k >= 35 && dObj.getMonth() !== dd.getMonth()) break;
-      const items = Tasks.on(day);
-      cells += `<button class="mcell${dObj.getMonth() !== dd.getMonth() ? ' out' : ''}${day === T ? ' today' : ''}${mobile && day === sel ? ' sel' : ''}" data-act="${mobile ? 'agenda-pick' : 'agenda-day'}" data-date="${day}">
-        <span class="dnum">${dObj.getDate()}</span>
-        ${items.slice(0, 3).map(i => `<span class="mev${i.t.type === 'event' ? ' event' : ''}${i.done ? ' done' : ''}">${i.t.type === 'reminder' ? '🔔 ' : ''}${i.time ? i.time + ' ' : ''}${esc(i.t.title)}</span>`).join('')}
-        ${items.length > 3 ? `<span class="mmore">+${items.length - 3}</span>` : ''}
-        <span class="mdots">${items.slice(0, 4).map(i => `<i class="${i.t.type === 'event' ? 'event' : ''}"></i>`).join('')}</span>
-      </button>`;
+      const day = addDays(start, k), dObj = parseYmd(day), out = dObj.getMonth() !== dd.getMonth();
+      if (k >= 35 && out) break;
+      const info = this.dayInfo(day), past = day < T;
+      if (!out) { nEvents += info.events.length; if (!past && info.state === 'free') { freeDays++; if (!nextFree) nextFree = day; } }
+      const wkend = [0, 6].includes(dObj.getDay());
+      const cls = ['mcell', 'st-' + info.state, out ? 'out' : '', past ? 'past' : '', wkend ? 'wkend' : '', day === T ? 'today' : '', day === sel ? 'sel' : ''].filter(Boolean).join(' ');
+      const evs = info.events.slice(0, mobile ? 0 : 3).map(i => `<span class="mev event${i.done ? ' done' : ''}"><em>${i.time || '—'}</em> ${esc(i.t.title)}</span>`).join('');
+      const timedTasks = showTasks && !mobile ? info.tasks.filter(i => i.time && i.t.type !== 'reminder').slice(0, Math.max(0, 3 - info.events.length)).map(i => `<span class="mev${i.done ? ' done' : ''}"><em>${i.time}</em> ${esc(i.t.title)}</span>`).join('') : '';
+      const more = !mobile && info.events.length > 3 ? `<span class="mmore">+${info.events.length - 3} compromissos</span>` : '';
+      const tcount = showTasks && !mobile && info.pend.length ? `<span class="mtasks">☑ ${info.pend.length} ${info.pend.length > 1 ? 'tarefas' : 'tarefa'}</span>` : '';
+      const tag = !past && !out && info.state === 'free' ? `<span class="mfree">Livre</span>` : info.state === 'full' && !past ? `<span class="mfull" title="Dia cheio"></span>` : '';
+      const dots = mobile ? `<span class="mdots">${info.events.slice(0, 3).map(() => '<i class="event"></i>').join('')}${showTasks && info.pend.length ? '<i></i>' : ''}</span>` : '';
+      cells += `<button class="${cls}" data-act="agenda-pick" data-date="${day}" aria-label="${fmtLong(day)}: ${info.state === 'free' ? 'livre' : info.events.length + ' compromissos'}">
+        <span class="mtop"><span class="dnum">${dObj.getDate()}</span>${tag}</span>${evs}${timedTasks}${more}${tcount}${dots}</button>`;
     }
-    return `<div class="month">${[1, 2, 3, 4, 5, 6, 0].map(i => `<div class="dow">${DOW_S[i]}</div>`).join('')}${cells}</div>${mobile ? this.dayList(sel) : ''}`;
+    const summary = `<div class="ag-sum">
+      <span><b>${freeDays}</b> ${freeDays === 1 ? 'dia livre' : 'dias livres'} pela frente</span>
+      <span><b>${nEvents}</b> ${nEvents === 1 ? 'compromisso' : 'compromissos'} no mês</span>
+      ${nextFree ? `<span>Próximo dia livre: <b>${relDay(nextFree)}</b></span>` : ''}
+      <span class="spacer"></span>
+      <label class="chk"><input type="checkbox" data-act="agenda-tasks" ${showTasks ? 'checked' : ''}> Mostrar tarefas</label>
+    </div>`;
+    const legend = `<div class="legend-row"><span class="legend"><i class="lg-free"></i>Livre</span><span class="legend"><i style="background:var(--event)"></i>Compromisso</span>${showTasks ? '<span class="legend"><i style="background:var(--accent-soft);border:1px solid var(--accent)"></i>Tarefa</span>' : ''}<span class="legend"><i style="background:var(--full)"></i>Dia cheio</span></div>`;
+    const grid = `<div class="month">${[1, 2, 3, 4, 5, 6, 0].map(i => `<div class="dow">${DOW_S[i]}</div>`).join('')}${cells}</div>`;
+    return `${summary}<div class="ag-split"><div>${grid}${legend}</div>${this.dayCard(sel)}</div>`;
   },
-  dayList(day) {
-    const items = Tasks.on(day);
-    return `<section class="block"><div class="block-h">${relDay(day) === fmtShort(day) ? fmtShort(day) : relDay(day) + ' <span class="muted">' + fmtShort(day) + '</span>'}<span class="spacer"></span><button class="btn sm ghost" data-act="capture" data-date="${day}">${icon('plus', 16)}</button></div>${C.list(items, { empty: 'Dia livre.' })}</section>`;
+  // Cartão do dia: compromissos e horários livres em ordem
+  dayCard(day, compact) {
+    const info = this.dayInfo(day), T = todayStr(), past = day < T, fmtR = (a, b) => `${fromMin(a)}–${fromMin(b)}`;
+    const head = `${relDay(day) === fmtShort(day) ? '' : relDay(day) + ' · '}${fmtLong(day)}`;
+    const status = info.state === 'free' ? (past ? 'Nenhum compromisso.' : 'Dia livre — nenhum compromisso marcado.')
+      : `${info.events.length ? info.events.length + (info.events.length > 1 ? ' compromissos' : ' compromisso') : 'Sem compromissos'}${info.pend.length ? ' · ' + info.pend.length + (info.pend.length > 1 ? ' tarefas' : ' tarefa') : ''}${past ? '' : ' · ' + (info.freeMin ? fmtDur(info.freeMin) + ' livres' : 'sem horário livre')}`;
+    // linha do tempo: blocos ocupados + janelas livres
+    const rows = [];
+    info.items.filter(i => i.time).forEach(i => rows.push({ at: toMin(i.time), html: `<button class="dc-item${i.t.type === 'event' ? ' event' : ''}${i.done ? ' done' : ''}" data-act="edit" data-key="${i.key}"><span class="dc-t">${i.time}</span><span class="dc-b"><b>${i.t.type === 'event' ? '📅 ' : i.t.type === 'reminder' ? '🔔 ' : '☑ '}${esc(i.t.title)}</b>${i.dur ? `<small>${fmtDur(i.dur)} · até ${fromMin(toMin(i.time) + i.dur)}</small>` : ''}</span></button>` }));
+    if (!past) info.free.forEach(g => rows.push({ at: g.start, free: 1, html: `<button class="dc-free" data-act="capture" data-date="${day}" data-time="${fromMin(g.start)}" aria-label="Agendar às ${fromMin(g.start)}"><span class="dc-t">${fromMin(g.start)}</span><span class="dc-b"><b>Livre</b><small>${fmtR(g.start, g.end)} · ${fmtDur(g.end - g.start)}</small></span><span class="dc-add">${icon('plus', 16)}</span></button>` }));
+    Sched.breaks().forEach(b => { if (b.start >= info.ws && b.end <= info.we) rows.push({ at: b.start, html: `<div class="dc-break"><span class="dc-t">${fromMin(b.start)}</span><span class="dc-b">${b.label} · até ${fromMin(b.end)}</span></div>` }); });
+    rows.sort((a, b) => a.at - b.at || (a.free ? 1 : -1));
+    const untimed = info.items.filter(i => !i.time);
+    return `<aside class="agday${compact ? ' compact' : ''} st-${info.state}">
+      <div class="dc-h"><div><h2>${esc(head)}</h2><p>${status}</p></div>
+        <button class="btn sm primary" data-act="capture" data-date="${day}" data-type="event">${icon('plus', 16)}Agendar</button></div>
+      ${rows.length ? `<div class="dc-list">${rows.map(r => r.html).join('')}</div>` : `<p class="muted dc-empty">${past ? 'Nada registrado.' : 'Nada marcado.'}</p>`}
+      ${untimed.length ? `<div class="dc-sub">Sem horário</div>${C.list(untimed)}` : ''}
+      ${compact ? '' : `<button class="btn ghost sm dc-more" data-act="agenda-day" data-date="${day}">Ver o dia por hora</button>`}
+    </aside>`;
   },
+  dayList(day) { return this.dayCard(day, true); },
   timeGrid(days) {
     const u = Store.state.user, all = days.map(d => Tasks.on(d)), T = todayStr();
     const timed = all.flat().filter(i => i.time);
@@ -1357,7 +1500,7 @@ const Views = {
     let h1 = Math.ceil(Math.max(toMin(u.dayEnd), ...timed.map(i => toMin(i.time) + Math.max(i.dur, 15))) / 60);
     h0 = Math.max(0, h0 - 1); h1 = Math.min(24, h1 + 1);
     const HH = 52, cols = `56px repeat(${days.length},minmax(0,1fr))`;
-    const head = `<div class="tg-head" style="grid-template-columns:${cols}"><div></div>${days.map(d => { const o = parseYmd(d); return `<div class="${d === T ? 'today' : ''}">${DOW_S[o.getDay()]}<b>${o.getDate()}</b></div>`; }).join('')}</div>`;
+    const head = `<div class="tg-head" style="grid-template-columns:${cols}"><div></div>${days.map(d => { const o = parseYmd(d); const fr = !Tasks.on(d).some(i => i.time && i.t.type !== 'reminder'); return `<button class="${d === T ? 'today' : ''}" data-act="agenda-day" data-date="${d}">${DOW_S[o.getDay()]}<b>${o.getDate()}</b>${fr && d >= T ? '<span class="mfree">Livre</span>' : ''}</button>`; }).join('')}</div>`;
     const allday = `<div class="tg-allday" style="grid-template-columns:${cols}"><div class="muted" style="font-size:11px;text-align:right;padding:6px">sem hora</div>${all.map(list => `<div>${list.filter(i => !i.time).map(i => `<button class="mev${i.done ? ' done' : ''}" style="border:0;text-align:left" data-act="edit" data-key="${i.key}">${esc(i.t.title)}</button>`).join('')}</div>`).join('')}</div>`;
     const hours = `<div class="tg-hours">${Array.from({ length: h1 - h0 }, (_, k) => `<div>${k ? pad(h0 + k) + ':00' : ''}</div>`).join('')}</div>`;
     const colsHtml = days.map((d, ci) => {
@@ -1805,14 +1948,231 @@ const Cloud = {
 };
 /* ---- app.js ---- */
 /* =====================================================================
+   NOVA · ai.js — Assistente: escreva ou fale e o NOVA agenda sozinho
+   Usa a função /api/ia (servidor, com a chave da OpenAI guardada lá).
+   Sem servidor disponível, usa o entendimento local de frases.
+   ===================================================================== */
+const Ai = {
+  history: [], busy: false, listening: false, online: null, last: {},
+
+  endpoint() {
+    const c = window.NOVA_CONFIG || {};
+    if (c.aiEndpoint === false) return null;
+    if (c.aiEndpoint) return c.aiEndpoint;
+    if (!/^https?:$/.test(location.protocol) || /claude\.ai|claudeusercontent|anthropic/.test(location.hostname)) return null;
+    return '/api/ia';
+  },
+
+  /* ---------- barra rápida (Agenda e Hoje) ---------- */
+  bar(where, noOut) {
+    const last = this.last[where];
+    return `<div class="ai-bar" data-where="${where}">
+      <div class="ai-in"><span class="ai-spark">${icon('spark', 18)}</span>
+        <input class="ai-text" id="ai-${where}" placeholder="Diga o que agendar… ex.: consulta dia 13 às 14h" aria-label="Pedir para a IA agendar" autocomplete="off" enterkeyhint="send">
+        <button class="ai-mic${this.listening === where ? ' on' : ''}" data-act="ai-mic" data-w="${where}" aria-label="Falar" title="${Speech.supported() ? 'Falar' : 'Voz não disponível neste navegador'}">${icon('mic', 18)}</button>
+        <button class="ai-send" data-act="ai-send" data-w="${where}" aria-label="Enviar">${icon('right', 18)}</button></div>
+      ${noOut ? '' : `<div class="ai-out" id="ai-out-${where}" aria-live="polite">${last ? this.resultHtml(last) : ''}</div>`}
+    </div>`;
+  },
+
+  /* ---------- página do Assistente ---------- */
+  page() {
+    const ex = ['Agenda uma consulta dia 13 às 14h', 'Anota reunião com o contador amanhã às 9h, dura 1 hora', 'Quais dias estou livre na semana que vem?', 'Me lembra de pagar o fornecedor toda sexta às 10h', 'Remarca a consulta para as 16h'];
+    const msgs = this.history.map(m => m.role === 'user'
+      ? `<div class="ai-msg me">${esc(m.content)}</div>`
+      : `<div class="ai-msg bot">${m.result ? this.resultHtml(m.result) : esc(m.content)}</div>`).join('');
+    return `<section class="page">
+      <h1 class="page-title">Assistente</h1>
+      <p class="page-sub muted">Escreva ou fale do seu jeito. O NOVA agenda, remarca e responde sobre sua agenda.</p>
+      <div class="ai-chat" id="ai-chat">${msgs || `<div class="ai-hello">${icon('spark', 28)}<p>Experimente:</p><div class="ai-ex">${ex.map(x => `<button class="chip" data-act="ai-example" data-text="${esc(x)}">${esc(x)}</button>`).join('')}</div></div>`}${this.busy ? '<div class="ai-msg bot"><span class="ai-dots"><i></i><i></i><i></i></span></div>' : ''}</div>
+      <div class="ai-compose">${this.bar('page', true)}</div>
+      ${this.endpoint() ? '' : '<p class="muted" style="font-size:13px;margin-top:10px">Modo simples: aqui o NOVA entende frases de agendamento. Perguntas e remarcações funcionam no site publicado com a IA ligada.</p>'}
+    </section>`;
+  },
+
+  /* ---------- enviar ---------- */
+  async send(where, textArg) {
+    const inp = $('#ai-' + where), text = (textArg ?? (inp ? inp.value : '')).trim();
+    if (!text || this.busy) return;
+    if (inp) inp.value = '';
+    this.busy = true;
+    if (where === 'page') { this.history.push({ role: 'user', content: text }); App.render(); this.scroll(); }
+    else this.setOut(where, '<div class="ai-card"><span class="ai-dots"><i></i><i></i><i></i></span> Entendendo…</div>');
+    let result;
+    try { result = await this.ask(text); }
+    catch (e) { result = { reply: e.message === 'auth' ? 'Sua sessão expirou. Entre de novo na conta.' : 'Não consegui falar com a IA agora. Tente de novo em instantes.', ops: [], error: true }; }
+    this.busy = false;
+    if (where === 'page') { this.history.push({ role: 'assistant', content: result.reply, result }); this.history = this.history.slice(-20); App.render(); this.scroll(); }
+    else { this.last[where] = result; App.render(); }
+  },
+  setOut(where, html) { const el = $('#ai-out-' + where); if (el) el.innerHTML = html; },
+  scroll() { setTimeout(() => { const c = $('#ai-chat'); if (c) c.scrollTop = c.scrollHeight; const b = $('.ai-compose'); b && b.scrollIntoView({ block: 'end' }); }, 30); },
+
+  async ask(text) {
+    const url = this.endpoint();
+    if (url && this.online !== false) {
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (typeof Cloud !== 'undefined' && Cloud.sb) { const { data } = await Cloud.sb.auth.getSession(); const tk = data && data.session && data.session.access_token; if (tk) headers.Authorization = 'Bearer ' + tk; }
+        const r = await fetch(url, { method: 'POST', headers, body: JSON.stringify({ text, context: this.context(), history: this.history.slice(-8).map(m => ({ role: m.role, content: m.content })) }) });
+        if (r.status === 404) { this.online = false; return this.local(text); }
+        if (r.status === 401) throw new Error('auth');
+        const data = await r.json().catch(() => null);
+        if (!r.ok || !data) { if (data && data.error === 'sem_chave') { this.online = false; return this.local(text); } throw new Error('server'); }
+        this.online = true;
+        return this.apply(data);
+      } catch (e) {
+        if (e.message === 'auth') throw e;
+        if (this.online === null) { this.online = false; return this.local(text); }
+        throw e;
+      }
+    }
+    return this.local(text);
+  },
+
+  /* O que a IA precisa saber: data de hoje e a agenda próxima */
+  context() {
+    const s = Store.state, T = todayStr(), items = [];
+    for (let k = -7; k <= 75 && items.length < 220; k++) {
+      const d = addDays(T, k);
+      Tasks.on(d).forEach(i => { if (!(k < 0 && i.done)) items.push({ ref: i.key, date: d, time: i.time || null, min: i.dur || null, type: i.t.type, title: i.t.title, done: i.done || undefined, repeats: i.rec || undefined }); });
+    }
+    Tasks.undated().slice(0, 30).forEach(i => items.push({ ref: i.key, date: null, time: null, type: i.t.type, title: i.t.title }));
+    const now = new Date();
+    return {
+      today: T, weekday: DOW[now.getDay()], now: fromMin(nowMin()), timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      dayStart: s.user.dayStart, dayEnd: s.user.dayEnd, lunch: s.settings.lunch.on ? s.settings.lunch.start + '-' + s.settings.lunch.end : null,
+      defaultReminder: s.settings.notif.defaultReminder, projects: s.projects.map(p => p.name), items,
+    };
+  },
+
+  /* Sem servidor: entende uma frase de agendamento com o leitor local */
+  local(text) {
+    const clean = text.replace(/^(?:ei\s+)?(?:nova[,\s]+)?(?:por\s+favor\s+)?(?:agend[ae]r?|anot[ae]r?|marc[ae]r?|coloc[ae]r?|bot[ae]r?|p[õo]e)(?:\s+(?:a[ií]|pra\s+mim|para\s+mim))?[\s,:]+(?:um[a]?\s+)?/i, '').replace(/\b(?:agenda|anota)\s+a[ií]\b/ig, '');
+    const p = Parser.parse(clean);
+    const isEvent = p.type === 'event' || /\b(consulta|reuni[ãa]o|compromisso|exame|dentista|m[ée]dic|entrevista|visita|audi[êe]ncia|almo[çc]o com|jantar|anivers[áa]rio|culto|viagem|voo)\b/i.test(clean) || (/^(agend|marc)/i.test(text.trim()) && p.time);
+    const title = (p.title || clean).replace(/^./, c => c.toUpperCase());
+    if (!p.date && !p.time && !p.recurrence) {
+      return { reply: 'Não encontrei data ou horário nessa frase. Tente algo como “consulta dia 13 às 14h”.', ops: [] };
+    }
+    return this.apply({ reply: '', actions: [{ op: 'create', type: isEvent ? 'event' : (p.intent ? 'task' : (p.type || 'task')), title, date: p.date || (p.time ? todayStr() : null), time: p.time || null, duration: p.duration || null, reminder: p.reminder ?? null, priority: p.priority || null, repeat_rule: p.recurrence || null }] });
+  },
+
+  /* Aplica o que a IA decidiu, de uma vez só (com Desfazer) */
+  apply(data) {
+    const s = Store.state, before = JSON.stringify(s), ops = [], T = todayStr();
+    const proj = name => { if (!name) return null; const p = s.projects.find(x => x.name.toLowerCase() === String(name).toLowerCase()); return p ? p.id : null; };
+    const okDate = d => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
+    const okTime = t => { if (typeof t !== 'string') return null; const m = t.match(/^(\d{1,2}):(\d{2})/); return m && +m[1] < 24 && +m[2] < 60 ? pad(+m[1]) + ':' + m[2] : null; };
+    for (const a of (data.actions || []).slice(0, 15)) {
+      try {
+        if (a.op === 'create') {
+          const type = ['event', 'task', 'reminder'].includes(a.type) ? a.type : 'task';
+          const date = okDate(a.date), time = okTime(a.time);
+          let recurrence = a.repeat_rule || null;
+          if (!recurrence && a.repeat) { const r = Parser.parse(String(a.repeat)); recurrence = r.recurrence || null; }
+          const t = mkTask({
+            title: String(a.title || 'Sem título').slice(0, 200), type, date: date || (recurrence ? T : null), time,
+            duration: a.duration > 0 ? Math.min(720, Math.round(a.duration)) : (type === 'event' ? 60 : 30),
+            priority: [1, 2, 3, 4].includes(a.priority) ? a.priority : (type === 'event' ? 2 : 3),
+            projectId: proj(a.project), desc: a.notes ? String(a.notes).slice(0, 1000) : '', recurrence,
+          });
+          t.reminder = a.reminder != null && a.reminder >= 0 ? Math.round(a.reminder) : (time ? s.settings.notif.defaultReminder : null);
+          if (recurrence && !date) t.date = Parser.firstOccurrence ? Parser.firstOccurrence(recurrence, T, new Date()) || T : T;
+          const clash = t.date && t.time ? Tasks.on(t.date).filter(i => i.time && i.t.type !== 'reminder' && !i.done && toMin(i.time) < toMin(t.time) + t.duration && toMin(t.time) < toMin(i.time) + i.dur) : [];
+          s.tasks.push(t);
+          ops.push({ kind: 'create', key: t.id + '@' + (t.recurrence ? t.date : (t.date || 'none')), t, clash: clash.map(i => i.time + ' ' + i.t.title) });
+        } else if (a.op === 'update' && a.ref) {
+          const i = Tasks.get(a.ref); if (!i) continue;
+          const date = okDate(a.date) || i.date || null, time = a.time === null ? undefined : okTime(a.time) || undefined;
+          let t = i.t;
+          if ((date && date !== i.date) || time) t = Tasks._move(s, a.ref, date || i.date, time) || i.t;
+          if (a.title) t.title = String(a.title).slice(0, 200);
+          if (a.duration > 0) t.duration = Math.min(720, Math.round(a.duration));
+          if (a.reminder != null && a.reminder >= 0) t.reminder = Math.round(a.reminder);
+          if (a.notes) t.desc = String(a.notes).slice(0, 1000);
+          ops.push({ kind: 'update', key: t.id + '@' + (t.recurrence ? date : (t.date || 'none')), t, date, time: time || (t.timeOverrides && t.timeOverrides[date]) || t.time });
+        } else if (a.op === 'complete' && a.ref) {
+          const i = Tasks.get(a.ref); if (!i) continue;
+          Tasks._complete(s, a.ref, true); ops.push({ kind: 'complete', t: i.t });
+        } else if (a.op === 'delete' && a.ref) {
+          const i = Tasks.get(a.ref); if (!i) continue;
+          ops.push({ kind: 'delete', key: a.ref, t: i.t, date: i.date, time: i.time, rec: i.rec }); // só com confirmação
+        }
+      } catch (e) { console.warn('[NOVA] ação ignorada', a, e); }
+    }
+    const changed = ops.some(o => o.kind !== 'delete');
+    if (changed) Store.save();
+    const result = { reply: String(data.reply || '').slice(0, 2000), ops, undo: changed ? before : null, id: uid(), after: Store.state.updatedAt };
+    if (changed) this.lastUndo = result.id;
+    if (!result.reply) result.reply = this.summary(ops);
+    this.results[result.id] = result;
+    return result;
+  },
+  results: {},
+
+  summary(ops) {
+    const c = ops.filter(o => o.kind === 'create');
+    if (!ops.length) return 'Não encontrei nada para agendar nessa frase.';
+    if (c.length === 1) { const t = c[0].t; return `Pronto! ${t.type === 'event' ? 'Compromisso agendado' : t.type === 'reminder' ? 'Lembrete criado' : 'Tarefa anotada'}.`; }
+    return 'Pronto!';
+  },
+
+  when(t, date, time) {
+    const d = date || t.date, h = time || t.time;
+    return [t.recurrence ? recLabel(t.recurrence) : (d ? `${relDay(d)}${['Hoje', 'Amanhã', 'Ontem'].includes(relDay(d)) ? ', ' + fmtShort(d) : ''}` : 'Sem data'), h ? 'às ' + h : ''].filter(Boolean).join(' ');
+  },
+  resultHtml(r) {
+    const cards = r.ops.map(o => {
+      const t = o.t, ico = t.type === 'event' ? '📅' : t.type === 'reminder' ? '🔔' : '☑';
+      if (o.kind === 'create') return `<div class="ai-item"><span class="ai-ico">${ico}</span><div><b>${esc(t.title)}</b><small>${esc(this.when(t))}${t.time && t.type !== 'reminder' ? ' · ' + fmtDur(t.duration) : ''}${t.reminder != null ? ' · 🔔 ' + reminderLabel(t.reminder) : ''}</small>${o.clash && o.clash.length ? `<small class="ai-warn">⚠️ Mesmo horário de: ${esc(o.clash.join(', '))}</small>` : ''}</div><button class="btn sm ghost" data-act="edit" data-key="${o.key}">Editar</button></div>`;
+      if (o.kind === 'update') return `<div class="ai-item"><span class="ai-ico">↪</span><div><b>${esc(t.title)}</b><small>Remarcado para ${esc(this.when(t, o.date, o.time))}</small></div><button class="btn sm ghost" data-act="edit" data-key="${o.key}">Editar</button></div>`;
+      if (o.kind === 'complete') return `<div class="ai-item"><span class="ai-ico">✓</span><div><b>${esc(t.title)}</b><small>Marcado como concluído</small></div></div>`;
+      if (o.kind === 'delete') return `<div class="ai-item del"><span class="ai-ico">🗑</span><div><b>Excluir “${esc(t.title)}”?</b><small>${esc(this.when(t, o.date, o.time))}${o.rec ? ' · só esta vez' : ''}</small></div>${o.done ? '<small class="muted">Excluído</small>' : `<button class="btn sm danger" data-act="ai-del" data-id="${r.id}" data-key="${o.key}">Excluir</button>`}</div>`;
+      return '';
+    }).join('');
+    return `<div class="ai-card${r.error ? ' err' : ''}"><p>${esc(r.reply)}</p>${cards ? `<div class="ai-items">${cards}</div>` : ''}${this.canUndo(r) ? `<div class="ai-foot"><button class="btn sm ghost" data-act="ai-undo" data-id="${r.id}">Desfazer</button></div>` : ''}${r.undone ? '<div class="ai-foot muted" style="font-size:13px">Desfeito.</div>' : ''}</div>`;
+  },
+
+  canUndo(r) { return !!(r.undo && !r.undone && r.id === this.lastUndo && Store.state.updatedAt === r.after); },
+  undo(id) {
+    const r = this.results[id]; if (!r || !this.canUndo(r)) { UI.snack('Não dá mais para desfazer: algo mudou depois. Edite o item direto.'); return; }
+    Store.state = migrate(JSON.parse(r.undo)); Store.save(); r.undone = true; App.render(); UI.snack('Desfeito.');
+  },
+  del(id, key) {
+    const r = this.results[id], o = r && r.ops.find(x => x.kind === 'delete' && x.key === key); if (!o || o.done) return;
+    const before = JSON.stringify(Store.state);
+    Store.commit(s => Tasks._remove(s, key, 'one')); o.done = true; App.render();
+    UI.snack('Excluído.', () => { Store.state = migrate(JSON.parse(before)); Store.save(); o.done = false; App.render(); });
+  },
+
+  /* ---------- voz: fala e já envia ---------- */
+  mic(where) {
+    if (!Speech.supported()) { UI.snack('A voz funciona no Chrome e no Edge. Neste navegador, digite a frase.'); return; }
+    if (this.listening) { Speech.stop(); return; }
+    const inp = $('#ai-' + where); let finalText = '';
+    this.listening = where; this.markMic(where, true);
+    if (inp) inp.placeholder = 'Ouvindo… fale agora';
+    Speech.start((txt, fin) => { const el = $('#ai-' + where); if (el) el.value = txt; if (fin) finalText = txt; }, err => {
+      this.listening = false; this.markMic(where, false);
+      const el = $('#ai-' + where); if (el) el.placeholder = 'Diga o que agendar… ex.: consulta dia 13 às 14h';
+      if (err === 'not-allowed' || err === 'service-not-allowed') UI.snack('Libere o microfone nas permissões do navegador.');
+      const txt = finalText || (el && el.value) || '';
+      if (txt.trim()) this.send(where, txt);
+    });
+  },
+  markMic(where, on) { $$(`.ai-mic[data-w="${where}"]`).forEach(b => b.classList.toggle('on', on)); },
+};
+/* =====================================================================
    NOVA — aplicação: navegação, ações, modais e eventos
    ===================================================================== */
 const NAV = [
-  ['today', 'Hoje', 'today'], ['agenda', 'Agenda', 'agenda'], ['tasks', 'Tarefas', 'tasks'], ['planner', 'Planner', 'planner'],
+  ['today', 'Hoje', 'today'], ['agenda', 'Agenda', 'agenda'], ['ai', 'Assistente', 'spark'], ['tasks', 'Tarefas', 'tasks'], ['planner', 'Planner', 'planner'],
   ['projects', 'Projetos', 'projects'], ['dontforget', 'Não esquecer', 'dontforget'], ['notes', 'Notas', 'notes'], ['routines', 'Rotinas', 'routines'],
   ['summary', 'Resumo', 'summary'], ['settings', 'Configurações', 'settings'],
 ];
 const WIDE = ['agenda', 'planner'];
+Views.ai = () => Ai.page();
 
 const UI = {
   onClose: null,
@@ -1839,7 +2199,7 @@ const UI = {
 const App = {
   route: 'today', snapshot: null,
   params: {
-    agenda: { view: 'week', date: todayStr() }, tasks: { filter: 'today', project: '', tag: '' },
+    agenda: { view: 'month', date: todayStr(), showTasks: true }, tasks: { filter: 'today', project: '', tag: '' },
     planner: { week: weekStart(todayStr()) }, projects: { id: null }, summary: { week: weekStart(todayStr()) },
   },
   isMobile: () => window.matchMedia('(max-width:759px)').matches,
@@ -1867,7 +2227,7 @@ const App = {
   renderShell() {
     const s = Store.state;
     $('#sidebar').innerHTML = `<div class="brand"><i class="brand-mark"></i><span>NOVA</span></div>
-      ${NAV.map(([k, l, ic], idx) => `${idx === 4 || idx === 8 ? '<div class="nav-sep"></div>' : ''}<button class="nav-btn" data-act="go" data-r="${k}" title="${l}">${icon(ic)}<span class="lbl">${l}</span><span class="count" data-count="${k}"></span></button>`).join('')}
+      ${NAV.map(([k, l, ic], idx) => `${idx === 5 || idx === 9 ? '<div class="nav-sep"></div>' : ''}<button class="nav-btn" data-act="go" data-r="${k}" title="${l}">${icon(ic)}<span class="lbl">${l}</span><span class="count" data-count="${k}"></span></button>`).join('')}
       <button class="side-capture" data-act="capture" title="Nova tarefa (N)">${icon('plus')}<span class="lbl">Nova tarefa</span></button>
       <div class="sync" id="sync"><i></i><span>Salvo neste dispositivo</span></div>`;
     $('#topbar').innerHTML = `<div class="brand"><i class="brand-mark"></i><span>NOVA</span></div>
@@ -1912,6 +2272,7 @@ const App = {
       const k = el.dataset.change; if (k && Changes[k]) Changes[k](el.dataset, el);
     });
     document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.matches && e.target.matches('.ai-text')) { e.preventDefault(); const w = e.target.closest('.ai-bar'); w && Ai.send(w.dataset.where); return; }
       if (e.key === 'Escape') { if ($('.focus')) return Focus.close(); if (UI.isOpen()) return UI.close(); }
       const typing = document.activeElement && document.activeElement.matches('input,textarea,select,[contenteditable]');
       if (typing || UI.isOpen() || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -1951,7 +2312,13 @@ const Changes = {
 const Actions = {
   go: d => App.go(d.r),
   'close-modal': () => UI.close(),
-  capture: d => Modals.capture({ date: d.date, time: d.time, project: d.project }),
+  capture: d => Modals.capture({ date: d.date, time: d.time, project: d.project, type: d.type }),
+  'ai-send': d => Ai.send(d.w),
+  'ai-mic': d => Ai.mic(d.w),
+  'ai-example': d => Ai.send('page', d.text),
+  'ai-undo': d => Ai.undo(d.id),
+  'ai-del': d => Ai.del(d.id, d.key),
+  'agenda-tasks': (d, el) => { App.params.agenda.showTasks = el.checked; App.render(); },
   search: () => Modals.search(),
   drawer: () => UI.sheet('Menu', NAV.map(([k, l, ic]) => ({ act: 'go', label: l, icon: ic, data: { r: k } }))),
   edit: d => Modals.editor(d.key),
@@ -2010,7 +2377,7 @@ const Actions = {
     App.render();
   },
   'agenda-day': d => { App.params.agenda.view = 'day'; App.params.agenda.date = d.date; App.render(); },
-  'agenda-pick': d => { App.params.agenda.date = d.date; App.render(); },
+  'agenda-pick': d => { const p = App.params.agenda; if (p.date === d.date && !App.isMobile()) { p.view = 'day'; } p.date = d.date; App.render(); },
   'planner-nav': d => { const n = +d.n; App.params.planner.week = n ? addDays(App.params.planner.week, n * 7) : weekStart(todayStr()); App.render(); },
   'summary-nav': d => { const n = +d.n; App.params.summary.week = n ? addDays(App.params.summary.week, n * 7) : weekStart(todayStr()); App.render(); },
   'task-filter': d => { App.params.tasks.filter = d.f; App.render(); },
@@ -2063,7 +2430,7 @@ const Modals = {
   capture(o = {}) {
     const ex = ['Me lembra amanhã às 15h de enviar o orçamento', 'Criar post da Dra. na sexta às 9h, leva 1 hora', 'Pagar conta todo dia 10', 'Reunião com cliente segunda às 10h'];
     UI.open(`<button class="btn ghost icon x" data-act="close-modal" aria-label="Fechar">${icon('x')}</button>
-      <h2>Nova tarefa</h2><p class="sub">Escreva do seu jeito. O NOVA entende data, hora, duração e repetição.</p>
+      <h2>${o.type === 'event' ? 'Novo compromisso' + (o.date ? ' · ' + fmtShort(o.date) : '') : 'Nova tarefa'}</h2><p class="sub">Escreva do seu jeito. O NOVA entende data, hora, duração e repetição.</p>
       <div class="qc-wrap"><textarea id="qc" class="qc-input" rows="2" placeholder="O que você precisa lembrar?" autofocus aria-label="Descreva a tarefa">${esc(o.text || '')}</textarea>
         <button class="mic" id="qc-mic" type="button" aria-label="Falar" title="${Speech.supported() ? 'Falar' : 'Voz não disponível neste navegador'}">${icon('mic')}</button></div>
       <div class="parsed" id="qc-parsed" aria-live="polite"></div>
@@ -2072,7 +2439,7 @@ const Modals = {
     const ta = $('#qc'), out = $('#qc-parsed');
     const build = () => {
       const p = Parser.parse(ta.value), s = Store.state;
-      const t = mkTask({ title: p.title || ta.value.trim(), date: p.date ?? o.date ?? (o.time ? todayStr() : null), time: p.time ?? o.time ?? null, duration: p.duration || (p.type === 'event' ? 60 : 30), priority: p.priority || 3, type: p.type || 'task', recurrence: p.recurrence, mustNotForget: p.mustNotForget, projectId: o.project || null });
+      const t = mkTask({ title: p.title || ta.value.trim(), date: p.date ?? o.date ?? (o.time ? todayStr() : null), time: p.time ?? o.time ?? null, duration: p.duration || ((p.type || o.type) === 'event' ? 60 : 30), priority: p.priority || 3, type: p.type || o.type || 'task', recurrence: p.recurrence, mustNotForget: p.mustNotForget, projectId: o.project || null });
       t.reminder = p.reminder ?? (t.time ? s.settings.notif.defaultReminder : (p.intent && t.date ? 0 : null));
       if (p.intent && !t.time && t.date) { t.time = '09:00'; t.reminder = p.reminder ?? 0; }
       if (t.priority === 1 && t.reminder != null && p.intent) t.persistent = true;
